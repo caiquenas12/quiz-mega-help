@@ -155,13 +155,13 @@ const perguntas = [
     numero: 16,
     tema: " Biologia",
     question: "Qual órgão é responsável pela filtração do sangue e formação da urina? ",
-    options: ["Bexiga ", "Rins", "Uretra", " Rins"],
+    options: ["Bexiga ", "Rins", "Uretra", " Estômago"],
     correct: 1,
     tempo: 20
   },
   {
     numero: 17,
-    tema: " Biologia",
+    tema: " Fisica",
     question: "Ao fazer uma curva, qual é a força aparente que parece empurrar o motorista para fora? ",
     options: ["Força centrípeta ", "Força gravitacional", "Força de atrito", " Força centrífuga"],
     correct: 3,
