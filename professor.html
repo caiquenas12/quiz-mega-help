@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Mega Help 2026 - Bauru-SP</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+
+<body>
+
+  <img src="img/logoFJU.png" alt="Logo FJU" class="imagem-canto">
+
+  <div class="quiz-container">
+
+    <!-- TELA DA PERGUNTA -->
+    <div id="quiz-screen" class="quiz-layout">
+
+      <div class="left-panel">
+
+        <div id="tema">Aguardando...</div>
+
+        <div id="cronometro">⏱️ --s</div>
+
+        <div id="question">
+          Pressione ENTER no teclado para começar o Quiz!
+        </div>
+
+        <div id="options"></div>
+
+      </div>
+
+      <div class="right-panel">
+
+        <img
+          src="img/fundo-Photoroom.png"
+          alt="Logo Help"
+          class="logo-img"
+          onerror="this.src='https://via.placeholder.com/350x350?text=Sua+Logo+Aqui'"
+        >
+
+      </div>
+
+    </div>
+
+
+    <!-- TELA DO RANKING PARCIAL -->
+    <div id="ranking-container" style="display: none;">
+
+      <h1 style="color: #ff5722; text-align: center; margin: 0 0 20px 0;">
+        🏆 RANKING PARCIAL - TOP 12
+      </h1>
+
+      <div id="ranking-grid" class="ranking-grid"></div>
+
+    </div>
+
+
+    <!-- TELA DE MENSAGEM PRÉ-PÓDIO (SUSPENSE) -->
+    <div id="pre-podium-container" style="display: none; text-align: center; padding: 40px 20px;">
+
+      
+
+      <h1 class="suspense-text" style="color: #ffffff; font-size: 48px; font-weight: 900; margin: 25px 0;">
+        E os grandes vencedores são... 🏆
+      </h1>
+
+      
+
+    </div>
+
+
+    <!-- TELA DO PÓDIO FINAL -->
+    <div id="podium-container" style="display: none;">
+
+      <h1 style="color: #ffd700; font-size: 38px; margin: 0 0 20px 0; text-align: center;">
+        👑 GRANDE FINAL - VENCEDORES 👑
+      </h1>
+
+      <div id="podium-flex" class="podium-flex"></div>
+
+    </div>
+
+
+    <!-- BOTÕES DE CONTROLE (ESCONDIDOS PERMANENTEMENTE NO TELÃO) -->
+    <div style="display: none;">
+      <button id="next-btn" class="btn-action hidden">
+        Iniciar Quiz
+      </button>
+
+      <button id="restart-btn" class="btn-action hidden">
+        Novo Quiz 🔄
+      </button>
+    </div>
+
+  </div>
+
+
+  <script>
+
+    const socket = io();
+
+    const quizScreen = document.getElementById("quiz-screen");
+    const rankingContainer = document.getElementById("ranking-container");
+    const rankingGrid = document.getElementById("ranking-grid");
+    const prePodiumContainer = document.getElementById("pre-podium-container");
+    const podiumContainer = document.getElementById("podium-container");
+    const podiumFlex = document.getElementById("podium-flex");
+
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const temaEl = document.getElementById("tema");
+    const cronometroEl = document.getElementById("cronometro");
+
+    const nextBtn = document.getElementById("next-btn");
+    const restartBtn = document.getElementById("restart-btn");
+
+    const fotoFallback =
+      "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+
+
+    // =====================================================
+    // CONTROLE DE ESTADO E TRAVA DE REQUISIÇÃO
+    // =====================================================
+
+    let estadoAtual = "INICIO";
+    let aguardandoResposta = false;
+
+
+    function sanitizarTexto(texto) {
+      const div = document.createElement("div");
+      div.textContent = texto;
+      return div.innerHTML;
+    }
+
+
+    // =====================================================
+    // LÓGICA PRINCIPAL DE AVANÇO DE TELA VIA TECLADO/CLICK
+    // =====================================================
+
+    function avançarQuiz() {
+
+      if (aguardandoResposta) return;
+
+      console.log("Avançando quiz... Estado atual:", estadoAtual);
+
+      // 1. INÍCIO -> Solicita a 1ª Pergunta
+      if (estadoAtual === "INICIO") {
+
+        aguardandoResposta = true;
+        socket.emit("proxima_pergunta");
+
+      }
+
+      // 2. PERGUNTA → RANKING PARCIAL OU TELA DE SUSPENSE (FIM)
+      else if (estadoAtual === "PERGUNTA") {
+
+        estadoAtual = "RANKING";
+
+        quizScreen.style.display = "none";
+        podiumContainer.style.display = "none";
+        prePodiumContainer.style.display = "none";
+        rankingContainer.style.display = "block";
+
+        // SOLICITA O RANKING OU O FIM AO SERVIDOR
+        socket.emit("obter_ranking");
+
+      }
+
+      // 3. RANKING PARCIAL → PRÓXIMA PERGUNTA
+      else if (estadoAtual === "RANKING") {
+
+        aguardandoResposta = true;
+
+        rankingContainer.style.display = "none";
+        podiumContainer.style.display = "none";
+        prePodiumContainer.style.display = "none";
+        quizScreen.style.display = "flex";
+
+        socket.emit("proxima_pergunta");
+
+      }
+
+      // 4. PRÉ-PÓDIO (MENSAGEM DE SUSPENSE) → REVELAR PÓDIO FINAL
+      else if (estadoAtual === "PRE_PODIUM") {
+
+        estadoAtual = "PODIUM";
+
+        prePodiumContainer.style.display = "none";
+        podiumContainer.style.display = "block";
+
+      }
+
+    }
+
+
+    // =====================================================
+    // CONTROLE VIA TECLADO (TECLAS ENTER E ESPAÇO)
+    // =====================================================
+
+    document.addEventListener("keydown", (event) => {
+
+      if (event.key === "Enter" || event.key === " ") {
+
+        event.preventDefault();
+        avançarQuiz();
+
+      }
+
+      if (event.key === "r" || event.key === "R") {
+
+        if (confirm("⚠️ Tem certeza que deseja REINICIAR o Quiz?")) {
+          socket.emit("reiniciar_quiz");
+        }
+
+      }
+
+    });
+
+
+    nextBtn.addEventListener("click", avançarQuiz);
+    restartBtn.addEventListener("click", () => socket.emit("reiniciar_quiz"));
+
+    socket.on("quiz_reiniciado", () => {
+      location.reload();
+    });
+
+
+    // =====================================================
+    // NOVA PERGUNTA
+    // =====================================================
+
+    socket.on("nova_pergunta", (q) => {
+
+      aguardandoResposta = false;
+      estadoAtual = "PERGUNTA";
+
+      rankingContainer.style.display = "none";
+      podiumContainer.style.display = "none";
+      prePodiumContainer.style.display = "none";
+      quizScreen.style.display = "flex";
+
+      temaEl.textContent = q.tema || "Conhecimentos Gerais";
+      questionEl.textContent = `${q.numero || 1}. ${q.question}`;
+      cronometroEl.textContent = `⏱️ ${q.tempo}s`;
+
+      optionsEl.innerHTML = "";
+
+      q.options.forEach((opt, index) => {
+        const btn = document.createElement("button");
+        btn.className = `option-btn opt-${index % 4}`;
+        btn.textContent = opt;
+        btn.disabled = false;
+        optionsEl.appendChild(btn);
+      });
+
+    });
+
+
+    // =====================================================
+    // CONTAGEM REGRESSIVA
+    // =====================================================
+
+    socket.on("tick_tempo", (tempo) => {
+      cronometroEl.textContent = `⏱️ ${tempo}s`;
+    });
+
+
+    // =====================================================
+    // TEMPO ESGOTADO
+    // =====================================================
+
+    socket.on("tempo_esgotado", (data) => {
+
+      cronometroEl.textContent = "⌛ TEMPO ESGOTADO!";
+
+      const botoes = document.querySelectorAll("#options .option-btn");
+      let idxCorreto = Number(data?.respostaCorreta);
+
+      if (isNaN(idxCorreto)) idxCorreto = 2;
+
+      botoes.forEach((btn, index) => {
+        btn.disabled = true;
+
+        if (index === idxCorreto) {
+          btn.style.setProperty("background-color", "#22c55e", "important");
+          btn.style.setProperty("color", "#ffffff", "important");
+          btn.style.setProperty("opacity", "1", "important");
+          btn.style.setProperty("filter", "none", "important");
+          btn.style.border = "3px solid #ffffff";
+          btn.style.boxShadow = "0 0 25px #22c55e";
+          btn.style.transform = "scale(1.04)";
+        } else {
+          btn.style.setProperty("opacity", "0.25", "important");
+          btn.style.setProperty("filter", "grayscale(100%)", "important");
+          btn.style.boxShadow = "none";
+        }
+      });
+
+    });
+
+
+    // =====================================================
+    // RECEBER E MOSTRAR RANKING TOP 12
+    // =====================================================
+
+    socket.on("mostrar_ranking", (data) => {
+
+      rankingGrid.innerHTML = "";
+      let lista = [];
+
+      if (data && Array.isArray(data.ranking)) {
+        lista = data.ranking;
+      } else if (Array.isArray(data)) {
+        lista = data;
+      } else if (data && typeof data === "object") {
+        lista = Object.values(data);
+      }
+
+      if (lista.length > 0) {
+        lista.forEach((aluno, index) => {
+          const card = document.createElement("div");
+          card.className = "player-card";
+
+          let fotoUrl = fotoFallback;
+          if (aluno.foto && String(aluno.foto).trim() !== "" && aluno.foto !== "null") {
+            fotoUrl = aluno.foto;
+          }
+
+          const nomeExibicao = sanitizarTexto(aluno.nome || aluno.name || `Jogador ${index + 1}`);
+          const escolaExibicao = sanitizarTexto(aluno.escola || aluno.school || "Escola não informada");
+          const pontosExibicao = aluno.pontos ?? aluno.score ?? 0;
+
+          card.innerHTML = `
+            <img src="${fotoUrl}" onerror="this.onerror=null;this.src='${fotoFallback}';" alt="Foto de ${nomeExibicao}">
+            <div class="player-info">
+              <p class="player-name">#${index + 1} ${nomeExibicao}</p>
+              <p class="player-school">${escolaExibicao}</p>
+              <span class="player-score">${pontosExibicao} pts</span>
+            </div>
+          `;
+
+          rankingGrid.appendChild(card);
+        });
+      } else {
+        rankingGrid.innerHTML = `
+          <p style="grid-column: 1/-1; text-align: center; font-size: 22px; color: #ffffff;">
+            Nenhum participante conectado ou cadastrado até o momento.
+          </p>
+        `;
+      }
+
+    });
+
+
+    // =====================================================
+    // FIM DO QUIZ - MENSAGEM DE SUSPENSE
+    // =====================================================
+
+    socket.on("fim_quiz", (data) => {
+
+      aguardandoResposta = false;
+
+      // Define o estado para Pré-Pódio
+      estadoAtual = "PRE_PODIUM";
+
+      // Oculta outras telas e mostra APENAS a tela de suspense
+      quizScreen.style.display = "none";
+      rankingContainer.style.display = "none";
+      podiumContainer.style.display = "none";
+      prePodiumContainer.style.display = "block";
+
+      // Monta os dados do Pódio em segundo plano
+      podiumFlex.innerHTML = "";
+      const titulos = ["🥇 1º LUGAR", "🥈 2º LUGAR", "🥉 3º LUGAR"];
+      let podiumLista = data?.podium || [];
+
+      if (podiumLista.length > 0) {
+        podiumLista.forEach((aluno, index) => {
+          const card = document.createElement("div");
+          card.className = `podium-card rank-${index + 1}`;
+
+          let fotoUrl = fotoFallback;
+          if (aluno.foto && String(aluno.foto).trim() !== "" && aluno.foto !== "null") {
+            fotoUrl = aluno.foto;
+          }
+
+          const nomeExibicao = sanitizarTexto(aluno.nome || aluno.name || "Jogador");
+          const escolaExibicao = sanitizarTexto(aluno.escola || aluno.school || "Escola");
+
+          card.innerHTML = `
+            <div class="podium-place">${titulos[index]}</div>
+            <img src="${fotoUrl}" onerror="this.onerror=null;this.src='${fotoFallback}';" alt="Foto de ${nomeExibicao}">
+            <p class="player-name">${nomeExibicao}</p>
+            <p class="player-school">${escolaExibicao}</p>
+            <span class="player-score">${aluno.pontos ?? aluno.score ?? 0} PONTOS</span>
+          `;
+
+          podiumFlex.appendChild(card);
+        });
+      } else {
+        podiumFlex.innerHTML = `<p style="font-size:20px; color:#fff;">Sem dados suficientes para o pódio.</p>`;
+      }
+
+    });
+
+  </script>
+
+</body>
+</html>
