@@ -65,7 +65,7 @@ socket.on("nova_pergunta", (q) => {
   const temaText = document.getElementById("aluno-tema");
   const cronometroText = document.getElementById("aluno-cronometro");
 
-  if (statusEl) statusEl.textContent = "Escolha sua resposta rapidamente:";
+  if (statusEl) statusEl.textContent = "";
   if (feedbackEl) feedbackEl.textContent = "";
   if (container) container.innerHTML = "";
 
