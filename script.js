@@ -86,6 +86,7 @@ socket.on("nova_pergunta", (q) => {
       q.options.forEach((opt, index) => {
         const btn = document.createElement("button");
         btn.className = `option-btn opt-${index % 4}`;
+        btn.dataset.index = index; // <--- ACRESCENTADO: Salva o índice do botão
         btn.textContent = opt;
 
         btn.onclick = () => {
@@ -93,7 +94,12 @@ socket.on("nova_pergunta", (q) => {
           socket.emit("enviar_resposta", index);
           
           // Trava todos os botões após responder
-          container.querySelectorAll("button").forEach(b => b.disabled = true);
+          container.querySelectorAll("button").forEach(b => {
+            b.disabled = true;
+            b.classList.remove("selected"); // <--- ACRESCENTADO
+          });
+          btn.classList.add("selected"); // <--- ACRESCENTADO: Marca a escolha do aluno
+
           if (statusEl) statusEl.textContent = "Resposta enviada! Aguarde...";
         };
 
@@ -116,6 +122,17 @@ socket.on("resultado_resposta", (data) => {
   const fb = document.getElementById("feedback");
   const placar = document.getElementById("placar-total");
 
+  // <--- ACRESCENTADO: Destaca os botões correto/errado
+  const buttons = document.querySelectorAll("#options-aluno .option-btn");
+  buttons.forEach(btn => {
+    const btnIndex = parseInt(btn.dataset.index);
+    if (data.respostaCorreta !== undefined && btnIndex === data.respostaCorreta) {
+      btn.classList.add("correct-answer");
+    } else if (btn.classList.contains("selected") && !data.correto) {
+      btn.classList.add("wrong-answer");
+    }
+  });
+
   if (fb) {
     if (data.correto) {
       fb.textContent = `✅ VOCÊ ACERTOU! (+${data.pontos || 0} pts)`;
@@ -130,6 +147,17 @@ socket.on("resultado_resposta", (data) => {
   if (placar && data.totalPontos !== undefined) {
     placar.textContent = `Pontuação Total: ${data.totalPontos} pts`;
   }
+});
+
+// <--- ACRESCENTADO: Revela a resposta correta caso venha um evento de revelação do servidor
+socket.on("revelar_resposta", (data) => {
+  const buttons = document.querySelectorAll("#options-aluno .option-btn");
+  buttons.forEach(btn => {
+    btn.disabled = true;
+    if (data.respostaCorreta !== undefined && parseInt(btn.dataset.index) === data.respostaCorreta) {
+      btn.classList.add("correct-answer");
+    }
+  });
 });
 
 // 6. TEMPO ESGOTADO
