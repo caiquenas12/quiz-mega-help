@@ -7,7 +7,9 @@ const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {
-  cors: { origin: "*", methods: ["GET", "POST"] }
+  cors: { origin: "*", methods: ["GET", "POST"] },
+  pingTimeout: 60000,   // Tolera até 60s sem resposta (ideal para oscilações no celular)
+  pingInterval: 25000
 });
 
 // Serve arquivos estáticos da pasta atual (imagens, css, js)
@@ -17,12 +19,10 @@ app.use(express.static(__dirname));
 // ROTAS DOS LINKS (TELÃO / PROFESSOR E ALUNOS)
 // =====================================================
 
-// 1. LINK DO TELÃO DO PROFESSOR (https://seu-dominio.com/professor)
 app.get('/professor', (req, res) => {
   res.sendFile(path.join(__dirname, 'professor.html'));
 });
 
-// 2. LINK DOS ALUNOS (https://seu-dominio.com/)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'aluno.html'));
 });
@@ -180,7 +180,8 @@ const perguntas = [
 // =====================================================
 // ESTADO GLOBAL DO SERVIDOR
 // =====================================================
-let jogadores = {};
+let jogadores = {}; // Armazena por chave única do jogador
+let socketParaJogadorKey = {}; // Mapeia socket.id -> chave do jogador
 let perguntaAtualIndex = -1;
 let tempoRestante = 0;
 let timerInterval = null;
@@ -229,25 +230,43 @@ function sanitizarEntrada(texto, fallback) {
 io.on('connection', (socket) => {
   console.log(`🔌 Novo cliente conectado: ${socket.id}`);
 
-  // 1. REGISTRO DO JOGADOR / ALUNO
+  // 1. REGISTRO / RECONEXÃO DO JOGADOR
   socket.on('entrar_quiz', (data = {}) => {
     const fotoPadrao = "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+    const nomeTratado = sanitizarEntrada(data.nome, 'Aluno');
+    const escolaTratada = sanitizarEntrada(data.escola, 'Escola Geral');
+    
+    // Cria uma chave única baseada no nome e escola para preservar o progresso se mudar de aba
+    const chaveJogador = `${nomeTratado.toLowerCase()}_${escolaTratada.toLowerCase()}`;
 
-    jogadores[socket.id] = {
-      id: socket.id,
-      nome: sanitizarEntrada(data.nome, 'Aluno'),
-      escola: sanitizarEntrada(data.escola, 'Escola Geral'),
-      foto: (data.foto && typeof data.foto === 'string' && data.foto.trim() !== "" && data.foto !== "null")
-        ? data.foto.trim()
-        : fotoPadrao,
-      pontos: 0,
-      respondeu: false
-    };
+    socketParaJogadorKey[socket.id] = chaveJogador;
 
-    console.log(`👤 Aluno registrado: ${jogadores[socket.id].nome} (${jogadores[socket.id].escola})`);
+    if (jogadores[chaveJogador]) {
+      // O jogador já existia! Atualiza apenas o socket.id sem perder pontos nem progresso
+      jogadores[chaveJogador].socketId = socket.id;
+      console.log(`🔄 Aluno reconectado: ${nomeTratado} (${escolaTratada})`);
+    } else {
+      // Novo cadastro
+      jogadores[chaveJogador] = {
+        socketId: socket.id,
+        nome: nomeTratado,
+        escola: escolaTratada,
+        foto: (data.foto && typeof data.foto === 'string' && data.foto.trim() !== "" && data.foto !== "null")
+          ? data.foto.trim()
+          : fotoPadrao,
+        pontos: 0,
+        respondeu: false
+      };
+      console.log(`👤 Novo aluno registrado: ${nomeTratado} (${escolaTratada})`);
+    }
+
+    // Se o quiz já estiver em andamento, envia a pergunta atual para o aluno que reconectou
+    if (perguntaAtualIndex >= 0 && perguntaAtualIndex < perguntas.length && !quizFinalizado) {
+      socket.emit('nova_pergunta', perguntas[perguntaAtualIndex]);
+    }
   });
 
-  // 2. SOLICITAÇÃO DE RANKING OU TELA FINAL PELO TELÃO
+  // 2. SOLICITAÇÃO DE RANKING OU TELA FINAL
   socket.on('obter_ranking', () => {
     const todosOrdenados = obterRankingOrdenado();
 
@@ -274,9 +293,9 @@ io.on('connection', (socket) => {
       const q = perguntas[perguntaAtualIndex];
       tempoRestante = q.tempo;
 
-      Object.keys(jogadores).forEach(id => {
-        if (jogadores[id]) {
-          jogadores[id].respondeu = false;
+      Object.keys(jogadores).forEach(key => {
+        if (jogadores[key]) {
+          jogadores[key].respondeu = false;
         }
       });
 
@@ -300,16 +319,18 @@ io.on('connection', (socket) => {
     isStartingQuestion = false;
     clearInterval(timerInterval);
 
-    jogadores = {}; // Resetar todos os jogadores da partida anterior
+    jogadores = {}; 
+    socketParaJogadorKey = {};
 
     console.log("🔄 Quiz reiniciado com sucesso.");
     io.emit('quiz_reiniciado');
-    io.emit('resetar_aluno'); // Envia instrução para os alunos voltarem à tela de login
+    io.emit('resetar_aluno'); 
   });
 
   // 5. RECEBER RESPOSTA DO PARTICIPANTE
   socket.on('enviar_resposta', (index) => {
-    const jogador = jogadores[socket.id];
+    const chave = socketParaJogadorKey[socket.id];
+    const jogador = jogadores[chave];
     const q = perguntas[perguntaAtualIndex];
 
     if (jogador && !jogador.respondeu && q && !quizFinalizado && tempoRestante > 0) {
@@ -334,19 +355,23 @@ io.on('connection', (socket) => {
     }
   });
 
-  // 6. DESCONEXÃO MANUAL VIA TELA
+  // 6. DESCONEXÃO MANUAL VIA BOTÃO NA TELA
   socket.on('aluno_desconectou_manual', () => {
-    if (jogadores[socket.id]) {
-      console.log(`🚪 Aluno fechou a aba: ${jogadores[socket.id].nome}`);
-      delete jogadores[socket.id];
+    const chave = socketParaJogadorKey[socket.id];
+    if (chave && jogadores[chave]) {
+      console.log(`🚪 Aluno saiu manualmente: ${jogadores[chave].nome}`);
+      delete jogadores[chave];
+      delete socketParaJogadorKey[socket.id];
     }
   });
 
-  // 7. DESCONEXÃO DO CLIENTE
+  // 7. DESCONEXÃO TEMPORÁRIA / PERDA DE SINAL
   socket.on('disconnect', () => {
-    if (jogadores[socket.id]) {
-      console.log(`❌ Cliente desconectado: ${jogadores[socket.id].nome} (${socket.id})`);
-      delete jogadores[socket.id];
+    const chave = socketParaJogadorKey[socket.id];
+    if (chave && jogadores[chave]) {
+      console.log(`⚠️ Sinal oscilou para: ${jogadores[chave].nome} (${socket.id}). Dados preservados no servidor.`);
+      delete socketParaJogadorKey[socket.id];
+      // O jogador PERMANECE salvo em 'jogadores[chave]', mantendo pontos e nome
     } else {
       console.log(`❌ Cliente não registrado desconectado: ${socket.id}`);
     }
