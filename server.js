@@ -300,12 +300,7 @@ io.on('connection', (socket) => {
     isStartingQuestion = false;
     clearInterval(timerInterval);
 
-    Object.keys(jogadores).forEach(id => {
-      if (jogadores[id]) {
-        jogadores[id].pontos = 0;
-        jogadores[id].respondeu = false;
-      }
-    });
+    jogadores = {}; // Alterado para resetar todos os jogadores da partida anterior
 
     console.log("🔄 Quiz reiniciado com sucesso.");
     io.emit('quiz_reiniciado');
