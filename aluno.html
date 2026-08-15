@@ -120,6 +120,22 @@
       reader.readAsDataURL(file);
     });
 
+    function realizarEntrada(nome, escola, foto) {
+      socket.emit("entrar_quiz", { 
+        nome: nome, 
+        escola: escola, 
+        foto: foto 
+      });
+
+      // Salva dados locais no navegador para reconexão automática
+      localStorage.setItem("quiz_aluno_nome", nome);
+      localStorage.setItem("quiz_aluno_escola", escola);
+      if (foto) localStorage.setItem("quiz_aluno_foto", foto);
+
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("game-screen").style.display = "block";
+    }
+
     document.getElementById("btn-entrar").onclick = function() {
       const nomeInput = document.getElementById("nome").value;
       const escolaInput = document.getElementById("escola").value;
@@ -129,15 +145,20 @@
         return;
       }
 
-      socket.emit("entrar_quiz", { 
-        nome: nomeInput, 
-        escola: escolaInput, 
-        foto: fotoBase64 
-      });
-
-      document.getElementById("login-screen").style.display = "none";
-      document.getElementById("game-screen").style.display = "block";
+      realizarEntrada(nomeInput, escolaInput, fotoBase64);
     };
+
+    // Auto-login se já existirem dados armazenados no navegador
+    socket.on("connect", () => {
+      const nomeSalvo = localStorage.getItem("quiz_aluno_nome");
+      const escolaSalva = localStorage.getItem("quiz_aluno_escola") || "";
+      const fotoSalva = localStorage.getItem("quiz_aluno_foto") || "";
+
+      if (nomeSalvo) {
+        fotoBase64 = fotoSalva;
+        realizarEntrada(nomeSalvo, escolaSalva, fotoSalva);
+      }
+    });
 
     socket.on("nova_pergunta", (q) => {
       document.getElementById("status").textContent = "Escolha sua resposta rapidamente:";
@@ -221,34 +242,27 @@
       document.getElementById("placar-total").textContent = "";
     });
 
-    // --- LÓGICA DE RESET COMPLETO E DESCONEXÃO DA TELA ---
-    
-    // Escuta o comando vindo do servidor/telão para voltar à tela inicial
+    // Reset acionado via professor/telão para nova rodada
     socket.on("resetar_aluno", () => {
-      // 1. Limpa os campos de input
+      localStorage.removeItem("quiz_aluno_nome");
+      localStorage.removeItem("quiz_aluno_escola");
+      localStorage.removeItem("quiz_aluno_foto");
+
       document.getElementById("nome").value = "";
       document.getElementById("escola").value = "";
       document.getElementById("foto-input").value = "";
       
-      // 2. Reseta a foto enviada e a imagem de prévia
       fotoBase64 = "";
       document.getElementById("preview-foto").src = FOTO_PADRAO;
 
-      // 3. Limpa elementos da tela do jogo
       document.getElementById("status").textContent = "Aguardando a pergunta...";
       document.getElementById("options-aluno").innerHTML = "";
       document.getElementById("question-container").style.display = "none";
       document.getElementById("feedback").textContent = "";
       document.getElementById("placar-total").textContent = "";
 
-      // 4. Alterna visibilidade para voltar à tela 1 (login)
       document.getElementById("game-screen").style.display = "none";
       document.getElementById("login-screen").style.display = "block";
-    });
-
-    // Garante o aviso de desconexão apenas ao fechar a janela/aba
-    window.addEventListener("beforeunload", () => {
-      socket.emit("aluno_desconectou_manual");
     });
   </script>
 </body>
