@@ -96,6 +96,7 @@
   <script>
     const socket = io();
     let fotoBase64 = "";
+    const FOTO_PADRAO = "https://cdn-icons-png.flaticon.com/512/847/847969.png";
 
     // Otimização e compressão de foto de perfil
     document.getElementById("foto-input").addEventListener("change", function(event) {
@@ -218,6 +219,36 @@
       document.getElementById("question-container").style.display = "none";
       document.getElementById("feedback").textContent = "";
       document.getElementById("placar-total").textContent = "";
+    });
+
+    // --- LÓGICA DE RESET COMPLETO E DESCONEXÃO DA TELA ---
+    
+    // Escuta o comando vindo do servidor/telão para voltar à tela inicial
+    socket.on("resetar_aluno", () => {
+      // 1. Limpa os campos de input
+      document.getElementById("nome").value = "";
+      document.getElementById("escola").value = "";
+      document.getElementById("foto-input").value = "";
+      
+      // 2. Reseta a foto enviada e a imagem de prévia
+      fotoBase64 = "";
+      document.getElementById("preview-foto").src = FOTO_PADRAO;
+
+      // 3. Limpa elementos da tela do jogo
+      document.getElementById("status").textContent = "Aguardando a pergunta...";
+      document.getElementById("options-aluno").innerHTML = "";
+      document.getElementById("question-container").style.display = "none";
+      document.getElementById("feedback").textContent = "";
+      document.getElementById("placar-total").textContent = "";
+
+      // 4. Alterna visibilidade para voltar à tela 1 (login)
+      document.getElementById("game-screen").style.display = "none";
+      document.getElementById("login-screen").style.display = "block";
+    });
+
+    // Garante o aviso de desconexão apenas ao fechar a janela/aba
+    window.addEventListener("beforeunload", () => {
+      socket.emit("aluno_desconectou_manual");
     });
   </script>
 </body>
