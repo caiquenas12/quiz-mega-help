@@ -89,7 +89,7 @@
 
   </div>
 
-  <!-- IMPORTAÇÃO DO SOCKET.IO (Única alteração necessária) -->
+  <!-- IMPORTAÇÃO DO SOCKET.IO -->
   <script src="/socket.io/socket.io.js"></script>
 
   <script>
@@ -184,6 +184,14 @@
 
         prePodiumContainer.style.display = "none";
         podiumContainer.style.display = "block";
+
+      }
+
+      // 5. PÓDIO FINAL → REINICIAR QUIZ PARA UMA NOVA RODADA
+      else if (estadoAtual === "PODIUM") {
+
+        aguardandoResposta = true;
+        socket.emit("reiniciar_quiz");
 
       }
 
