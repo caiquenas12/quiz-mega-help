@@ -300,10 +300,11 @@ io.on('connection', (socket) => {
     isStartingQuestion = false;
     clearInterval(timerInterval);
 
-    jogadores = {}; // Alterado para resetar todos os jogadores da partida anterior
+    jogadores = {}; // Resetar todos os jogadores da partida anterior
 
     console.log("🔄 Quiz reiniciado com sucesso.");
     io.emit('quiz_reiniciado');
+    io.emit('resetar_aluno'); // Envia instrução para os alunos voltarem à tela de login
   });
 
   // 5. RECEBER RESPOSTA DO PARTICIPANTE
@@ -333,7 +334,15 @@ io.on('connection', (socket) => {
     }
   });
 
-  // 6. DESCONEXÃO DO CLIENTE
+  // 6. DESCONEXÃO MANUAL VIA TELA
+  socket.on('aluno_desconectou_manual', () => {
+    if (jogadores[socket.id]) {
+      console.log(`🚪 Aluno fechou a aba: ${jogadores[socket.id].nome}`);
+      delete jogadores[socket.id];
+    }
+  });
+
+  // 7. DESCONEXÃO DO CLIENTE
   socket.on('disconnect', () => {
     if (jogadores[socket.id]) {
       console.log(`❌ Cliente desconectado: ${jogadores[socket.id].nome} (${socket.id})`);
