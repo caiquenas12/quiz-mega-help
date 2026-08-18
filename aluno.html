@@ -67,7 +67,7 @@
         <input type="file" id="foto-input" accept="image/*">
       </div>
 
-      <input type="text" id="nome" placeholder="Seu Nome Completo">
+      <input type="text" id="nome" placeholder="Seu Nome e sobrenome" maxlength="23">
       <input type="text" id="escola" placeholder="Nome da sua Escola">
       <button class="btn-main" id="btn-entrar" type="button">Entrar no Jogo</button>
     </div>
@@ -121,14 +121,17 @@
     });
 
     function realizarEntrada(nome, escola, foto) {
+      // Garante que o nome terá no máximo 23 caracteres
+      const nomeLimitado = nome.trim().slice(0, 23);
+
       socket.emit("entrar_quiz", { 
-        nome: nome, 
+        nome: nomeLimitado, 
         escola: escola, 
         foto: foto 
       });
 
       // Salva dados locais no navegador para reconexão automática
-      localStorage.setItem("quiz_aluno_nome", nome);
+      localStorage.setItem("quiz_aluno_nome", nomeLimitado);
       localStorage.setItem("quiz_aluno_escola", escola);
       if (foto) localStorage.setItem("quiz_aluno_foto", foto);
 
