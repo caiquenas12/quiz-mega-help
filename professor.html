@@ -77,7 +77,7 @@
 
 
     <!-- BOTÕES DE CONTROLE (ESCONDIDOS PERMANENTEMENTE NO TELÃO) -->
-    <div class="botoes-container">
+    <div style="display: none;">
       <button id="next-btn" class="btn-action hidden">
         Iniciar Quiz
       </button>
@@ -292,9 +292,17 @@
         btn.disabled = true;
 
         if (index === idxCorreto) {
-          btn.classList.add("resposta-correta");
+          btn.style.setProperty("background-color", "#22c55e", "important");
+          btn.style.setProperty("color", "#ffffff", "important");
+          btn.style.setProperty("opacity", "1", "important");
+          btn.style.setProperty("filter", "none", "important");
+          btn.style.border = "3px solid #ffffff";
+          btn.style.boxShadow = "0 0 25px #22c55e";
+          btn.style.transform = "scale(1.04)";
         } else {
-          btn.classList.add("resposta-incorreta");
+          btn.style.setProperty("opacity", "0.25", "important");
+          btn.style.setProperty("filter", "grayscale(100%)", "important");
+          btn.style.boxShadow = "none";
         }
       });
 
@@ -409,3 +417,4 @@
 
 </body>
 </html>
+
