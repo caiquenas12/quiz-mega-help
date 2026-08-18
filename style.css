@@ -9,7 +9,7 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #e6ebe97b; /* Fallback para navegadores antigos */
   background: #e2dfdfe1 url('img/fundo24.png') no-repeat center center fixed;
-  background-size: 88%;
+  background-size: cover;
   color: #ffffff;
   margin: 0;
   padding: 20px;
@@ -140,7 +140,7 @@ body {
   background-color: #ff8585;
 }
 
-/* ANIMACÕES E EFEITOS DE RESPOSTA CORRETA/INCORRETA */
+/* ANIMAÇÕES E EFEITOS DE RESPOSTA CORRETA/INCORRETA */
 @keyframes pulsarRespostaCerta {
   0% {
     transform: scale(1);
@@ -357,11 +357,12 @@ body {
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, transform 0.1s ease;
 }
 
 .btn-action:hover {
   background: #5b5be0;
+  transform: translateY(-2px);
 }
 
 #restart-btn {
@@ -409,7 +410,8 @@ body {
     flex-direction: column;
   }
   
-  .left-panel, .right-panel {
+  .left-panel, 
+  .right-panel {
     width: 100%;
   }
 
@@ -422,7 +424,9 @@ body {
     align-items: center;
   }
 
-  .rank-1, .rank-2, .rank-3 {
+  .rank-1, 
+  .rank-2, 
+  .rank-3 {
     order: initial;
     transform: none;
     margin-bottom: 0;
