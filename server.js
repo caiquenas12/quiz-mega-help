@@ -230,7 +230,7 @@ const bancoDePerguntasCompleto = [
   { tema: "Inglês", question: "Em inglês, qual é a tradução de 'Book'?", options: ["Mesa", "Porta", "Livro", "Janela"], correct: 2, tempo: 20 },
   { tema: "Inglês", question: "Em inglês, como se diz 'Água'?", options: ["Milk", "Juice", "Water", "Coffee"], correct: 2, tempo: 20 },
   { tema: "Inglês", question: "Em inglês, qual é a tradução de 'Apple'?", options: ["Banana", "Laranja", "Maçã", "Uva"], correct: 2, tempo: 20 },
-  { tema: "Inglês", question:  'Em inglês, como se diz Bom dia'?", options: ["Good night", "Goodbye", "Good morning", "Good evening"], correct: 2, tempo: 20 },
+  { tema: "Inglês", question: "Em inglês, como se diz Bom dia'?", options: ["Good night", "Goodbye", "Good morning", "Good evening"], correct: 2, tempo: 20 },
   { tema: "Inglês", question: "Em inglês, qual é a tradução de 'Blue'?", options: ["Verde", "Vermelho", "Azul", "Amarelo"], correct: 2, tempo: 20 },
   { tema: "Inglês", question: "Em inglês, como se diz 'Escola'?", options: ["Hospital", "School", "Market", "Church"], correct: 1, tempo: 20 },
   { tema: "Inglês", question: "Em inglês, qual é a tradução de 'Chair'?", options: ["Mesa", "Janela", "Cadeira", "Porta"], correct: 2, tempo: 20 },
