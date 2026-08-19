@@ -237,7 +237,7 @@ const bancoDePerguntasCompleto = [
 
 
   // --- MATEMÁTICA ---
-  
+  { tema: "Matemática", question: "Qual é o valor de 5²?", options: ["10", "15", "20", "25"], correct: 3, tempo: 20 },
   { tema: "Matemática", question: "Qual é o perímetro de um quadrado com lado de 5 cm?", options: ["15 cm", "20 cm", "25 cm", "30 cm"], correct: 1, tempo: 20 },
   { tema: "Matemática", question: "Qual é a área de um quadrado com lado de 7 cm?", options: ["42 cm²", "49 cm²", "56 cm²", "63 cm²"], correct: 1, tempo: 20 },
   { tema: "Matemática", question: "Qual é a área de um triângulo com base de 10 cm e altura de 6 cm?", options: ["30 cm²", "40 cm²", "50 cm²", "60 cm²"], correct: 0, tempo: 20 },
