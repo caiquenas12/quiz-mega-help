@@ -195,17 +195,17 @@ const bancoDePerguntasCompleto = [
  
   // --- GEOGRAFIA: CURIOSIDADES DO BRASIL ---
 
-{ tema: "Geografia", question: "Quantos estados possui o Brasil?", options: ["24", "25", "26", "27"], correct: 2, tempo: 20 },
-{ tema: "Geografia", question: "Quantas regiões oficiais possui o Brasil?", options: ["4", "5", "6", "7"], correct: 1, tempo: 20 },
-{ tema: "Geografia", question: "Qual é a maior região brasileira em extensão territorial?", options: ["Norte", "Nordeste", "Sudeste", "Sul"], correct: 0, tempo: 20 },
-{ tema: "Geografia", question: "Qual região possui o maior número de estados?", options: ["Sul", "Nordeste", "Norte", "Sudeste"], correct: 1, tempo: 20 },
-{ tema: "Geografia", question: "Qual é o maior estado brasileiro em área?", options: ["Amazonas", "Pará", "Mato Grosso", "Bahia"], correct: 0, tempo: 20 },
-{ tema: "Geografia", question: "Qual é o menor estado brasileiro em área?", options: ["Sergipe", "Alagoas", "Espírito Santo", "Rio de Janeiro"], correct: 0, tempo: 20 },
-{ tema: "Geografia", question: "Qual é a maior cidade do Brasil em população?", options: ["Rio de Janeiro", "São Paulo", "Brasília", "Salvador"], correct: 1, tempo: 20 },
-{ tema: "Geografia", question: "Qual cidade é conhecida como Cidade Maravilhosa?", options: ["São Paulo", "Rio de Janeiro", "Salvador", "Recife"], correct: 1, tempo: 20 },
-{ tema: "Geografia", question
+const perguntas = [
+  // --- GEOGRAFIA: CURIOSIDADES DO BRASIL ---
+  { tema: "Geografia", question: "Quantos estados possui o Brasil?", options: ["24", "25", "26", "27"], correct: 2, tempo: 20 },
+  { tema: "Geografia", question: "Quantas regiões oficiais possui o Brasil?", options: ["4", "5", "6", "7"], correct: 1, tempo: 20 },
+  { tema: "Geografia", question: "Qual é a maior região brasileira em extensão territorial?", options: ["Norte", "Nordeste", "Sudeste", "Sul"], correct: 0, tempo: 20 },
+  { tema: "Geografia", question: "Qual região possui o maior número de estados?", options: ["Sul", "Nordeste", "Norte", "Sudeste"], correct: 1, tempo: 20 },
+  { tema: "Geografia", question: "Qual é o maior estado brasileiro em área?", options: ["Amazonas", "Pará", "Mato Grosso", "Bahia"], correct: 0, tempo: 20 },
+  { tema: "Geografia", question: "Qual é o menor estado brasileiro em área?", options: ["Sergipe", "Alagoas", "Espírito Santo", "Rio de Janeiro"], correct: 0, tempo: 20 },
+  { tema: "Geografia", question: "Qual é a maior cidade do Brasil em população?", options: ["Rio de Janeiro", "São Paulo", "Brasília", "Salvador"], correct: 1, tempo: 20 },
+  { tema: "Geografia", question: "Qual cidade é conhecida como Cidade Maravilhosa?", options: ["São Paulo", "Rio de Janeiro", "Salvador", "Recife"], correct: 1, tempo: 20 },
 
-  
   // --- HISTÓRIA ---
   { tema: "História", question: "Qual navegante chegou ao Brasil em 1500?", options: ["Cristóvão Colombo", "Vasco da Gama", "Pedro Álvares Cabral", "Fernão de Magalhães"], correct: 2, tempo: 20 },
   { tema: "História", question: "Quem foi o último imperador do Brasil?", options: ["Pedro I", "Pedro II", "Dom João VI", "Tiradentes"], correct: 1, tempo: 20 },
@@ -235,7 +235,8 @@ const bancoDePerguntasCompleto = [
   { tema: "História", question: "Qual foi o nome do período de perseguição política no Brasil entre 1964 e 1985?", options: ["Ditadura Militar", "Estado Novo", "República Velha", "Nova República"], correct: 0, tempo: 20 },
   { tema: "História", question: "Qual foi a principal rota comercial que ligava a Europa à Ásia na Idade Média?", options: ["Rota do Atlântico", "Rota da Seda", "Rota do Ouro", "Rota das Índias"], correct: 1, tempo: 20 },
   { tema: "História", question: "Qual presidente brasileiro ficou conhecido pelo lema '50 anos em 5'?", options: ["Juscelino Kubitschek", "Getúlio Vargas", "João Goulart", "Tancredo Neves"], correct: 0, tempo: 20 },
-  { tema: "História", question: "Em que ano a escravidão foi abolida no Brasil?", options: ["1822", "1888", "1889", "1930"], correct: 1, tempo: 20 },
+  { tema: "História", question: "Em que ano a escravidão foi abolida no Brasil?", options: ["1822", "1888", "1889", "1930"], correct: 1, tempo: 20 }
+
 
   // --- MATEMÁTICA ---
   { tema: "Matemática", question: "Qual é o valor de 5²?", options: ["10", "15", "20", "25"], correct: 3, tempo: 20 },
@@ -293,6 +294,83 @@ const bancoDePerguntasCompleto = [
   { tema: "Química", question: "Qual é o processo utilizado para separar o pó de café da água após o preparo?", options: ["Decantação", "Filtração", "Evaporação", "Destilação"], correct: 1, tempo: 20 },
   { tema: "Química", question: "Qual reação química ocorre nas células para liberar energia a partir da glicose?", options: ["Fotossíntese", "Respiração celular", "Fermentação", "Neutralização"], correct: 1, tempo: 20 },
   { tema: "Química", question: "Qual é o nome do processo que aumenta a temperatura da Terra ao reter calor na atmosfera?", options: ["Efeito estufa", "Fotossíntese", "Combustão", "Respiração celular"], correct: 0, tempo: 20 },
+
+  { tema: "Química", question: "Qual partícula do átomo possui carga elétrica negativa?", options: ["Próton", "Nêutron", "Elétron", "Núcleo"], correct: 2, tempo: 20 },
+  { tema: "Química", question: "Qual partícula do átomo não possui carga elétrica?", options: ["Próton", "Nêutron", "Elétron", "Íon"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual partícula determina o número atômico de um elemento?", options: ["Elétron", "Nêutron", "Próton", "Íon"], correct: 2, tempo: 20 },
+  { tema: "Química", question: "Qual é o número atômico do carbono?", options: ["4", "6", "8", "12"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual é o símbolo químico do ferro?", options: ["Fe", "F", "Fr", "Fi"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Qual é o símbolo químico do ouro?", options: ["O", "Au", "Ag", "Gd"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual é o símbolo químico da prata?", options: ["Pt", "Pr", "Ag", "Au"], correct: 2, tempo: 20 },
+  { tema: "Química", question: "Qual elemento possui o símbolo Na?", options: ["Nitrogênio", "Sódio", "Neônio", "Níquel"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual elemento possui o símbolo K?", options: ["Cálcio", "Potássio", "Criptônio", "Carbono"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual elemento é representado pelo símbolo Ca?", options: ["Carbono", "Cálcio", "Cádmio", "Cobalto"], correct: 1, tempo: 20 },
+
+  { tema: "Química", question: "Qual elemento é conhecido por formar o gás utilizado nos balões para fazê-los flutuar?", options: ["Oxigênio", "Hélio", "Nitrogênio", "Cloro"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual gás é mais abundante na atmosfera terrestre?", options: ["Oxigênio", "Nitrogênio", "Dióxido de carbono", "Hélio"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual elemento é essencial para a formação dos ossos e dentes?", options: ["Cálcio", "Ferro", "Sódio", "Cloro"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Qual elemento é fundamental para o transporte de oxigênio no sangue?", options: ["Cálcio", "Ferro", "Potássio", "Magnésio"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual elemento químico está presente na grafite e no diamante?", options: ["Silício", "Carbono", "Ferro", "Enxofre"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual elemento é encontrado em grande quantidade nos oceanos na forma de sais?", options: ["Sódio", "Ouro", "Ferro", "Hélio"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Qual é o elemento mais abundante no Universo?", options: ["Oxigênio", "Carbono", "Hidrogênio", "Hélio"], correct: 2, tempo: 20 },
+  { tema: "Química", question: "Qual gás nobre é usado em letreiros luminosos de cor avermelhada?", options: ["Hélio", "Neônio", "Argônio", "Criptônio"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual gás nobre é frequentemente usado em lâmpadas para evitar a oxidação do filamento?", options: ["Argônio", "Oxigênio", "Cloro", "Hidrogênio"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Em qual estado físico as partículas possuem maior liberdade de movimento?", options: ["Sólido", "Líquido", "Gasoso", "Cristalino"], correct: 2, tempo: 20 },
+
+  { tema: "Química", question: "Quando o gelo derrete, ocorre uma mudança de estado chamada:", options: ["Fusão", "Vaporização", "Condensação", "Sublimação"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Quando a água líquida passa para o estado gasoso, ocorre:", options: ["Fusão", "Solidificação", "Vaporização", "Condensação"], correct: 2, tempo: 20 },
+  { tema: "Química", question: "Quando o vapor de água vira líquido, ocorre:", options: ["Fusão", "Condensação", "Sublimação", "Solidificação"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Quando a água líquida vira gelo, ocorre:", options: ["Vaporização", "Condensação", "Solidificação", "Sublimação"], correct: 2, tempo: 20 },
+  { tema: "Química", question: "Qual mudança de estado ocorre quando o gelo seco passa diretamente para gás?", options: ["Fusão", "Sublimação", "Condensação", "Solidificação"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual fenômeno ocorre quando a roupa molhada seca no varal?", options: ["Condensação", "Vaporização", "Solidificação", "Fusão"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Por que o álcool colocado na pele provoca sensação de frio?", options: ["Porque congela rapidamente", "Porque evapora e absorve calor", "Porque libera oxigênio", "Porque aumenta a temperatura da pele"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual método é mais adequado para separar areia e água?", options: ["Filtração", "Destilação", "Evaporação", "Sublimação"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Qual método pode ser usado para separar dois líquidos com diferentes pontos de ebulição?", options: ["Filtração", "Decantação", "Destilação", "Catação"], correct: 2, tempo: 20 },
+  { tema: "Química", question: "Como podemos separar limalha de ferro de areia?", options: ["Filtração", "Imantação", "Destilação", "Evaporação"], correct: 1, tempo: 20 },
+
+  { tema: "Química", question: "Uma solução com pH 7 é considerada:", options: ["Ácida", "Básica", "Neutra", "Corrosiva"], correct: 2, tempo: 20 },
+  { tema: "Química", question: "Uma substância com pH menor que 7 é:", options: ["Ácida", "Básica", "Neutra", "Metálica"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Uma substância com pH maior que 7 é:", options: ["Ácida", "Básica", "Neutra", "Radioativa"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual dessas substâncias é naturalmente ácida?", options: ["Suco de limão", "Sabão", "Água sanitária", "Bicarbonato de sódio"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Qual substância é conhecida por ser uma base presente em muitos produtos de limpeza?", options: ["Vinagre", "Sabão", "Suco de limão", "Refrigerante"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "O vinagre contém principalmente qual ácido?", options: ["Ácido sulfúrico", "Ácido clorídrico", "Ácido acético", "Ácido nítrico"], correct: 2, tempo: 20 },
+  { tema: "Química", question: "O bicarbonato de sódio é representado por qual fórmula?", options: ["NaCl", "NaHCO₃", "NaOH", "H₂CO₃"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual substância é usada para diminuir a acidez do estômago?", options: ["Antiácido", "Ácido sulfúrico", "Álcool", "Cloro"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Uma reação entre um ácido e uma base geralmente produz:", options: ["Sal e água", "Apenas oxigênio", "Metal e gás", "Apenas carbono"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Como é chamada a reação entre um ácido e uma base?", options: ["Combustão", "Neutralização", "Oxidação", "Fermentação"], correct: 1, tempo: 20 },
+
+  { tema: "Química", question: "Qual gás é consumido durante uma combustão?", options: ["Nitrogênio", "Oxigênio", "Hélio", "Dióxido de carbono"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "O que geralmente é liberado em uma reação de combustão?", options: ["Energia", "Apenas água", "Nitrogênio puro", "Sal"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Qual combustível é formado principalmente por hidrocarbonetos?", options: ["Gasolina", "Água", "Sal de cozinha", "Oxigênio"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Qual elemento está presente em todos os hidrocarbonetos?", options: ["Oxigênio", "Carbono", "Cloro", "Sódio"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "O metano é formado por quais elementos?", options: ["Carbono e hidrogênio", "Carbono e oxigênio", "Sódio e cloro", "Nitrogênio e oxigênio"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Qual é a fórmula do gás metano?", options: ["CH₄", "C₂H₆", "CO₂", "CH₃OH"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Qual é a principal característica de uma reação exotérmica?", options: ["Absorve calor", "Libera calor", "Não envolve energia", "Sempre produz água"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Uma reação endotérmica:", options: ["Libera calor", "Absorve energia do ambiente", "Sempre produz luz", "Não sofre alteração de temperatura"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Quando uma substância libera luz e calor durante uma reação, isso pode indicar uma:", options: ["Combustão", "Filtração", "Decantação", "Fusão"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "A ferrugem do ferro é um exemplo de reação envolvendo principalmente:", options: ["Oxidação", "Neutralização", "Sublimação", "Fermentação"], correct: 0, tempo: 20 },
+
+  { tema: "Química", question: "Qual substância é conhecida como água oxigenada?", options: ["H₂O", "H₂O₂", "CO₂", "O₃"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual é a fórmula do gás oxigênio presente no ar?", options: ["O", "O₂", "O₃", "CO₂"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual é a fórmula do ozônio?", options: ["O₂", "O₃", "CO₂", "H₂O"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual dessas substâncias é formada por dois átomos de hidrogênio e um de oxigênio?", options: ["H₂O", "CO₂", "H₂O₂", "O₂"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Qual é a fórmula do dióxido de carbono?", options: ["CO", "CO₂", "C₂O", "C₂O₂"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual é a fórmula do gás hidrogênio?", options: ["H", "H₂", "H₂O", "HO₂"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual substância é formada pela combinação de sódio e cloro?", options: ["Água", "Sal de cozinha", "Açúcar", "Ácido acético"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual é a fórmula do hidróxido de sódio, conhecido como soda cáustica?", options: ["NaCl", "NaOH", "NaHCO₃", "HCl"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual é a fórmula do álcool etílico presente nas bebidas alcoólicas?", options: ["CH₄", "C₂H₅OH", "C₆H₁₂O₆", "CH₃COOH"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual é a fórmula molecular da sacarose, o açúcar comum?", options: ["C₆H₁₂O₆", "C₁₂H₂₂O₁₁", "CH₄", "C₂H₅OH"], correct: 1, tempo: 20 },
+
+  { tema: "Química", question: "Qual propriedade indica a quantidade de matéria presente em um corpo?", options: ["Massa", "Densidade", "Volume", "Temperatura"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Qual grandeza representa o espaço ocupado por um corpo?", options: ["Massa", "Volume", "Densidade", "Pressão"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "A densidade é calculada pela relação entre:", options: ["Massa e volume", "Temperatura e pressão", "Tempo e massa", "Volume e temperatura"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Por que o óleo fica sobre a água em um recipiente?", options: ["Porque o óleo é mais denso", "Porque o óleo é menos denso", "Porque a água é gasosa", "Porque o óleo congela"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Qual unidade é muito utilizada para medir quantidade de matéria?", options: ["Newton", "Mol", "Joule", "Pascal"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "O número de Avogadro representa aproximadamente:", options: ["6,02 × 10²³ partículas", "9,8 × 10² partículas", "3,14 × 10⁶ partículas", "1,6 × 10⁻¹⁹ partículas"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Qual é a unidade de massa mais utilizada no Sistema Internacional?", options: ["Grama", "Quilograma", "Tonelada", "Miligrama"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "Quando aumentamos a temperatura de um gás, mantendo o volume constante, sua pressão tende a:", options: ["Diminuir", "Aumentar", "Zerar", "Permanecer sempre igual"], correct: 1, tempo: 20 },
+  { tema: "Química", question: "O que acontece com as partículas de uma substância quando sua temperatura aumenta?", options: ["Movimentam-se mais rapidamente", "Param de se mover", "Desaparecem", "Transformam-se sempre em elétrons"], correct: 0, tempo: 20 },
+  { tema: "Química", question: "Qual fator geralmente aumenta a velocidade de uma reação química?", options: ["Diminuir a temperatura", "Aumentar a temperatura", "Retirar todos os reagentes", "Congelar os reagentes"], correct: 1, tempo: 20 }
 
   // --- ARTE E CULTURA ---
   { tema: "Arte e Cultura", question: "Quem escreveu o livro O Guarani?", options: ["Machado de Assis", "José de Alencar", "Monteiro Lobato", "Carlos Drummond de Andrade"], correct: 1, tempo: 20 },
