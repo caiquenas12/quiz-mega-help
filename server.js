@@ -233,11 +233,11 @@ const bancoDePerguntasCompleto = [
   { tema: "História", question: "Qual foi o nome do período de perseguição política no Brasil entre 1964 e 1985?", options: ["Ditadura Militar", "Estado Novo", "República Velha", "Nova República"], correct: 0, tempo: 20 },
   { tema: "História", question: "Qual foi a principal rota comercial que ligava a Europa à Ásia na Idade Média?", options: ["Rota do Atlântico", "Rota da Seda", "Rota do Ouro", "Rota das Índias"], correct: 1, tempo: 20 },
   { tema: "História", question: "Qual presidente brasileiro ficou conhecido pelo lema '50 anos em 5'?", options: ["Juscelino Kubitschek", "Getúlio Vargas", "João Goulart", "Tancredo Neves"], correct: 0, tempo: 20 },
-  { tema: "História", question: "Em que ano a escravidão foi abolida no Brasil?", options: ["1822", "1888", "1889", "1930"], correct: 1, tempo: 20 }
+  { tema: "História", question: "Em que ano a escravidão foi abolida no Brasil?", options: ["1822", "1888", "1889", "1930"], correct: 1, tempo: 20 },
 
 
   // --- MATEMÁTICA ---
-  { tema: "Matemática", question: "Qual é o valor de 5²?", options: ["10", "15", "20", "25"], correct: 3, tempo: 20 },
+  
   { tema: "Matemática", question: "Qual é o perímetro de um quadrado com lado de 5 cm?", options: ["15 cm", "20 cm", "25 cm", "30 cm"], correct: 1, tempo: 20 },
   { tema: "Matemática", question: "Qual é a área de um quadrado com lado de 7 cm?", options: ["42 cm²", "49 cm²", "56 cm²", "63 cm²"], correct: 1, tempo: 20 },
   { tema: "Matemática", question: "Qual é a área de um triângulo com base de 10 cm e altura de 6 cm?", options: ["30 cm²", "40 cm²", "50 cm²", "60 cm²"], correct: 0, tempo: 20 },
