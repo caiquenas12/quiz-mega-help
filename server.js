@@ -586,7 +586,7 @@ const bancoDePerguntasCompleto = [
 { tema: "Arte e Cultura", question: "Qual instrumento possui teclas pretas e brancas?", options: ["Piano", "Violino", "Flauta", "Trompete"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual instrumento possui cordas e geralmente é tocado com um arco?", options: ["Violino", "Piano", "Trompete", "Flauta"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual instrumento é típico das escolas de samba?", options: ["Surdo", "Violino", "Piano", "Harpa"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Qual ritmo brasileiro é tradicionalmente associado ao carnaval de Pernambuco?", options: ["Frevo", "Sertanejo", "Bossa Nova", "Vanerão"], correct: 0, tempo: 20 },
+
 { tema: "Arte e Cultura", question: "Qual ritmo é tradicional da Bahia e tem forte influência africana?", options: ["Axé", "Fado", "Tango", "Flamenco"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual ritmo brasileiro nasceu principalmente no Rio de Janeiro e é símbolo do país?", options: ["Samba", "Tango", "Reggae", "Flamenco"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual gênero musical brasileiro é associado a nomes como Luiz Gonzaga?", options: ["Forró", "Rock", "Funk", "Reggae"], correct: 0, tempo: 20 },
