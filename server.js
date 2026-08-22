@@ -587,7 +587,6 @@ const bancoDePerguntasCompleto = [
 { tema: "Arte e Cultura", question: "Qual instrumento possui cordas e geralmente é tocado com um arco?", options: ["Violino", "Piano", "Trompete", "Flauta"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual instrumento é típico das escolas de samba?", options: ["Surdo", "Violino", "Piano", "Harpa"], correct: 0, tempo: 20 },
 
-{ tema: "Arte e Cultura", question: "Qual ritmo é tradicional da Bahia e tem forte influência africana?", options: ["Axé", "Fado", "Tango", "Flamenco"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual ritmo brasileiro nasceu principalmente no Rio de Janeiro e é símbolo do país?", options: ["Samba", "Tango", "Reggae", "Flamenco"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual gênero musical brasileiro é associado a nomes como Luiz Gonzaga?", options: ["Forró", "Rock", "Funk", "Reggae"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual estilo musical brasileiro ficou famoso mundialmente com João Gilberto?", options: ["Bossa Nova", "Heavy Metal", "Axé", "Forró"], correct: 0, tempo: 20 },
@@ -610,7 +609,7 @@ const bancoDePerguntasCompleto = [
 { tema: "Arte e Cultura", question: "Qual dança brasileira é marcada por movimentos rápidos e guarda-chuvas coloridos?", options: ["Frevo", "Samba", "Bumba meu boi", "Carimbó"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "A capoeira mistura principalmente luta, música e:", options: ["Dança", "Natação", "Pintura", "Teatro de sombras"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual instrumento é tradicionalmente utilizado na capoeira?", options: ["Berimbau", "Saxofone", "Violino", "Piano"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Qual manifestação cultural brasileira é marcada por personagens como Rei, Rainha e Boi?", options: ["Bumba meu boi", "Frevo", "Samba", "Fandango"], correct: 0, tempo: 20 },
+
 
 { tema: "Arte e Cultura", question: "Qual é o maior símbolo arquitetônico de Brasília projetado por Oscar Niemeyer?", options: ["Catedral de Brasília", "Torre Eiffel", "Cristo Redentor", "MASP"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Quem projetou grande parte dos principais edifícios de Brasília?", options: ["Oscar Niemeyer", "Santos Dumont", "Aleijadinho", "Tarsila do Amaral"], correct: 0, tempo: 20 },
@@ -622,25 +621,13 @@ const bancoDePerguntasCompleto = [
 { tema: "Arte e Cultura", question: "Aleijadinho ficou famoso principalmente por suas:", options: ["Esculturas e obras religiosas", "Composições musicais", "Pinturas impressionistas", "Obras cinematográficas"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Em qual estado brasileiro está localizada a cidade histórica de Ouro Preto?", options: ["Minas Gerais", "Bahia", "São Paulo", "Pernambuco"], correct: 0, tempo: 20 },
 
-{ tema: "Arte e Cultura", question: "Qual personagem do folclore brasileiro possui uma perna só?", options: ["Saci", "Curupira", "Boto", "Boitatá"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Qual personagem do folclore brasileiro possui os pés virados para trás?", options: ["Curupira", "Saci", "Iara", "Boto"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Qual personagem do folclore brasileiro é conhecido como uma criatura em forma de serpente de fogo?", options: ["Boitatá", "Saci", "Curupira", "Boto"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Qual personagem do folclore brasileiro é conhecido como a 'Mãe das Águas'?", options: ["Iara", "Cuca", "Mula sem Cabeça", "Cuca"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Segundo o folclore brasileiro, o Boto pode se transformar em:", options: ["Homem", "Lobo", "Árvore", "Cavalo"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Qual personagem do folclore brasileiro é representado por uma mulher com cabeça de jacaré?", options: ["Cuca", "Iara", "Mãe-d'Água", "Mula sem Cabeça"], correct: 0, tempo: 20 },
 
 { tema: "Arte e Cultura", question: "Qual festa brasileira é conhecida pelas quadrilhas e comidas típicas?", options: ["Festa Junina", "Carnaval", "Réveillon", "Oktoberfest"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual é a dança tradicional das festas juninas?", options: ["Quadrilha", "Tango", "Flamenco", "Frevo"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual personagem tradicional costuma aparecer nas festas juninas?", options: ["Caipira", "Samurai", "Cavaleiro medieval", "Faraó"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual comida é tradicional nas festas juninas?", options: ["Canjica", "Sushi", "Croissant", "Paella"], correct: 0, tempo: 20 },
 
-{ tema: "Arte e Cultura", question: "Na mitologia grega, quem era o deus do trovão?", options: ["Zeus", "Hades", "Ares", "Hermes"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Na mitologia grega, quem era o deus do mar?", options: ["Poseidon", "Zeus", "Apolo", "Ares"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Na mitologia grega, quem governava o mundo dos mortos?", options: ["Hades", "Zeus", "Hermes", "Dionísio"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Qual criatura da mitologia grega possuía corpo de leão e cabeça humana?", options: ["Esfinge", "Medusa", "Minotauro", "Centauro"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Qual criatura da mitologia grega possuía cabeça de touro e corpo humano?", options: ["Minotauro", "Centauro", "Medusa", "Hidra"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Quem era a deusa grega da sabedoria?", options: ["Atena", "Afrodite", "Hera", "Ártemis"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Quem era o deus grego da guerra?", options: ["Ares", "Hermes", "Apolo", "Dionísio"], correct: 0, tempo: 20 },
+
 
 { tema: "Arte e Cultura", question: "Qual filme foi o primeiro longa-metragem brasileiro indicado ao Oscar de Melhor Filme Internacional?", options: ["Central do Brasil", "Cidade de Deus", "O Pagador de Promessas", "Carandiru"], correct: 2, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual filme brasileiro ficou conhecido internacionalmente com a frase 'Você não sabe com quem está falando'?", options: ["Tropa de Elite", "Cidade de Deus", "Central do Brasil", "O Auto da Compadecida"], correct: 0, tempo: 20 },
@@ -680,9 +667,8 @@ const bancoDePerguntasCompleto = [
 { tema: "Arte e Cultura", question: "Machu Picchu está localizado atualmente em qual país?", options: ["Peru", "México", "Brasil", "Chile"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual povo antigo construiu as famosas pirâmides do Egito?", options: ["Egípcios", "Romanos", "Gregos", "Incas"], correct: 0, tempo: 20 },
 
-{ tema: "Arte e Cultura", question: "Qual é o nome do famoso carnaval realizado no Rio de Janeiro?", options: ["Carnaval do Rio", "Carnaval de Veneza", "Oktoberfest", "Festival de Cannes"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Qual cidade brasileira é famosa pelo carnaval com blocos de rua e frevo?", options: ["Recife", "Brasília", "Curitiba", "Goiânia"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Qual cidade brasileira é famosa pelos trios elétricos no carnaval?", options: ["Salvador", "Porto Alegre", "Manaus", "Brasília"], correct: 0, tempo: 20 },
+
+
 
 { tema: "Arte e Cultura", question: "Qual escritor criou Sherlock Holmes?", options: ["Arthur Conan Doyle", "Agatha Christie", "Victor Hugo", "Charles Dickens"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Quem criou o personagem Peter Pan?", options: ["J. M. Barrie", "Lewis Carroll", "J. K. Rowling", "C. S. Lewis"], correct: 0, tempo: 20 },
@@ -717,18 +703,12 @@ const bancoDePerguntasCompleto = [
 { tema: "Arte e Cultura", question: "Qual artista mexicano ficou famoso pelos grandes murais?", options: ["Diego Rivera", "Pablo Picasso", "Salvador Dalí", "Claude Monet"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual movimento artístico buscava representar sonhos e o inconsciente?", options: ["Surrealismo", "Cubismo", "Realismo", "Impressionismo"], correct: 0, tempo: 20 },
 
-{ tema: "Arte e Cultura", question: "Qual é o nome da arte japonesa de dobrar papel?", options: ["Origami", "Ikebana", "Mangá", "Kabuki"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Como são chamadas as histórias em quadrinhos japonesas?", options: ["Mangá", "Anime", "Origami", "Kabuki"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Como são chamadas as animações produzidas no Japão?", options: ["Anime", "Mangá", "Kabuki", "Origami"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Qual é uma forma tradicional de teatro japonês?", options: ["Kabuki", "Frevo", "Samba", "Ópera"], correct: 0, tempo: 20 },
 
-{ tema: "Arte e Cultura", question: "Qual país é conhecido mundialmente pelo flamenco?", options: ["Espanha", "Portugal", "Itália", "França"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Qual país é conhecido pelo tango?", options: ["Argentina", "Brasil", "Chile", "Peru"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Qual país é tradicionalmente associado ao fado?", options: ["Portugal", "Espanha", "Itália", "Grécia"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Qual país é conhecido pela tradição da ópera?", options: ["Itália", "Brasil", "Japão", "México"], correct: 0, tempo: 20 },
 
-{ tema: "Arte e Cultura", question: "Qual é o nome da famosa casa de ópera localizada na Austrália?", options: ["Ópera de Sydney", "Scala de Milão", "Ópera de Paris", "Metropolitan Opera"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Qual cidade é famosa pela Ópera de Sydney?", options: ["Sydney", "Melbourne", "Londres", "Paris"], correct: 0, tempo: 20 },
+
+
+
+
 
 { tema: "Arte e Cultura", question: "Qual é o nome da famosa obra de Leonardo da Vinci que retrata uma mulher sorrindo?", options: ["Mona Lisa", "Guernica", "O Grito", "Abaporu"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual obra de Van Gogh retrata um céu noturno cheio de estrelas?", options: ["A Noite Estrelada", "O Grito", "Guernica", "O Beijo"], correct: 0, tempo: 20 },
@@ -745,8 +725,6 @@ const bancoDePerguntasCompleto = [
 { tema: "Arte e Cultura", question: "Qual cidade é conhecida como um importante centro histórico do barroco brasileiro?", options: ["Ouro Preto", "Brasília", "Santos", "Campinas"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual estilo arquitetônico é muito presente nas igrejas históricas de Minas Gerais?", options: ["Barroco", "Gótico", "Modernista", "Futurista"], correct: 0, tempo: 20 },
 
-{ tema: "Arte e Cultura", question: "Qual é o nome da cerimônia tradicional japonesa do chá?", options: ["Chanoyu", "Kabuki", "Origami", "Ikebana"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Ikebana é uma arte tradicional japonesa relacionada a:", options: ["Arranjos de flores", "Dobraduras", "Artes marciais", "Teatro"], correct: 0, tempo: 20 },
 
 { tema: "Arte e Cultura", question: "Qual personagem é conhecido por viver no bairro da Vila do Chaves?", options: ["Chaves", "Chapolin", "Seu Madruga", "Quico"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual personagem mexicano é conhecido como 'o herói mais atrapalhado que existe'?", options: ["Chapolin Colorado", "Chaves", "Chiquinha", "Quico"], correct: 0, tempo: 20 },
@@ -771,11 +749,9 @@ const bancoDePerguntasCompleto = [
 { tema: "Arte e Cultura", question: "Qual é o nome da pessoa que escreve uma peça teatral?", options: ["Dramaturgo", "Coreógrafo", "Cenógrafo", "Maquiador"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Quem cria os movimentos e passos de uma dança?", options: ["Coreógrafo", "Dramaturgo", "Cenógrafo", "Produtor"], correct: 0, tempo: 20 },
 
-{ tema: "Arte e Cultura", question: "Qual é o nome da arte de organizar movimentos corporais em uma sequência?", options: ["Coreografia", "Fotografia", "Escultura", "Gravura"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Qual técnica artística utiliza uma matriz para produzir várias imagens?", options: ["Gravura", "Dança", "Teatro", "Ópera"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Qual técnica consiste em pintar sobre uma parede ainda úmida?", options: ["Afresco", "Colagem", "Gravura", "Origami"], correct: 0, tempo: 20 },
 
-{ tema: "Arte e Cultura", question: "Qual elemento visual indica a distância e profundidade em uma pintura?", options: ["Perspectiva", "Ritmo", "Melodia", "Rima"], correct: 0, tempo: 20 },
+
+
 { tema: "Arte e Cultura", question: "Quais são consideradas cores primárias na pintura tradicional?", options: ["Vermelho, amarelo e azul", "Verde, laranja e roxo", "Preto, branco e cinza", "Rosa, marrom e bege"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual cor resulta da mistura de azul e amarelo?", options: ["Verde", "Roxo", "Laranja", "Marrom"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "Qual cor resulta da mistura de vermelho e azul?", options: ["Roxo", "Verde", "Laranja", "Amarelo"], correct: 0, tempo: 20 },
@@ -803,7 +779,7 @@ const bancoDePerguntasCompleto = [
 
 { tema: "Arte e Cultura", question: "Qual é uma característica marcante da cultura brasileira?", options: ["Grande diversidade cultural", "Ausência de influências estrangeiras", "Uma única tradição regional", "Pouca diversidade musical"], correct: 0, tempo: 20 },
 { tema: "Arte e Cultura", question: "A cultura brasileira recebeu fortes influências de povos:", options: ["Indígenas, africanos e europeus", "Apenas europeus", "Apenas africanos", "Apenas asiáticos"], correct: 0, tempo: 20 },
-{ tema: "Arte e Cultura", question: "Qual manifestação cultural brasileira tem forte influência africana?", options: ["Capoeira", "Ballet clássico", "Ópera italiana", "Tango argentino"], correct: 0, tempo: 20 },
+
 
   // --- ESPORTE ---
   { tema: "Esporte", question: "Qual é a duração oficial de uma partida de futebol profissional?", options: ["60 minutos", "70 minutos", "90 minutos", "100 minutos"], correct: 2, tempo: 20 },
