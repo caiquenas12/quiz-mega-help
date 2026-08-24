@@ -54,6 +54,18 @@
     </div>
 
 
+    <!-- TELA DE ANÚNCIO DA 2ª RODADA (TOP 4) -->
+    <div id="top4-container" style="display: none; text-align: center; padding: 20px;">
+
+      <h1 id="top4-mensagem" style="color: #ffca28; font-size: 36px; margin: 0 0 20px 0;">
+        🔥 2ª RODADA — CLASSIFICADOS 🔥
+      </h1>
+
+      <div id="top4-grid" class="ranking-grid" style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;"></div>
+
+    </div>
+
+
     <!-- TELA DE MENSAGEM PRÉ-PÓDIO (SUSPENSE) -->
     <div id="pre-podium-container" style="display: none; text-align: center; padding: 40px 20px;">
 
@@ -99,6 +111,9 @@
     const quizScreen = document.getElementById("quiz-screen");
     const rankingContainer = document.getElementById("ranking-container");
     const rankingGrid = document.getElementById("ranking-grid");
+    const top4Container = document.getElementById("top4-container");
+    const top4Mensagem = document.getElementById("top4-mensagem");
+    const top4Grid = document.getElementById("top4-grid");
     const prePodiumContainer = document.getElementById("pre-podium-container");
     const podiumContainer = document.getElementById("podium-container");
     const podiumFlex = document.getElementById("podium-flex");
@@ -156,6 +171,7 @@
         quizScreen.style.display = "none";
         podiumContainer.style.display = "none";
         prePodiumContainer.style.display = "none";
+        top4Container.style.display = "none";
         rankingContainer.style.display = "block";
 
         // SOLICITA O RANKING OU O FIM AO SERVIDOR
@@ -163,12 +179,13 @@
 
       }
 
-      // 3. RANKING PARCIAL → PRÓXIMA PERGUNTA
-      else if (estadoAtual === "RANKING") {
+      // 3. RANKING PARCIAL OU TOP 4 → PRÓXIMA PERGUNTA
+      else if (estadoAtual === "RANKING" || estadoAtual === "TOP4") {
 
         aguardandoResposta = true;
 
         rankingContainer.style.display = "none";
+        top4Container.style.display = "none";
         podiumContainer.style.display = "none";
         prePodiumContainer.style.display = "none";
         quizScreen.style.display = "flex";
@@ -183,6 +200,7 @@
         estadoAtual = "PODIUM";
 
         prePodiumContainer.style.display = "none";
+        top4Container.style.display = "none";
         podiumContainer.style.display = "block";
 
         // Manda o servidor reiniciar e resetar as telas dos alunos para o login
@@ -245,6 +263,7 @@
       estadoAtual = "PERGUNTA";
 
       rankingContainer.style.display = "none";
+      top4Container.style.display = "none";
       podiumContainer.style.display = "none";
       prePodiumContainer.style.display = "none";
       quizScreen.style.display = "flex";
@@ -363,6 +382,66 @@
 
 
     // =====================================================
+    // RECEBER E ANUNCIAR TOP 4 (2ª RODADA)
+    // =====================================================
+
+    socket.on("anunciar_top4", (data) => {
+
+      aguardandoResposta = false;
+      estadoAtual = "TOP4";
+
+      quizScreen.style.display = "none";
+      rankingContainer.style.display = "none";
+      podiumContainer.style.display = "none";
+      prePodiumContainer.style.display = "none";
+      top4Container.style.display = "block";
+
+      if (data && data.mensagem) {
+        top4Mensagem.textContent = data.mensagem;
+      } else {
+        top4Mensagem.textContent = "🔥 2ª RODADA — CLASSIFICADOS 🔥";
+      }
+
+      top4Grid.innerHTML = "";
+      const listaTop4 = data?.top4 || [];
+
+      if (listaTop4.length > 0) {
+        listaTop4.forEach((aluno, index) => {
+          const card = document.createElement("div");
+          card.className = "player-card";
+
+          let fotoUrl = fotoFallback;
+          if (aluno.foto && String(aluno.foto).trim() !== "" && aluno.foto !== "null") {
+            fotoUrl = aluno.foto;
+          }
+
+          const nomeExibicao = sanitizarTexto(aluno.nome || aluno.name || `Jogador ${index + 1}`);
+          const escolaExibicao = sanitizarTexto(aluno.escola || aluno.school || "Escola não informada");
+          const pontosExibicao = aluno.pontos ?? aluno.score ?? 0;
+
+          card.innerHTML = `
+            <img src="${fotoUrl}" onerror="this.onerror=null;this.src='${fotoFallback}';" alt="Foto de ${nomeExibicao}">
+            <div class="player-info">
+              <p class="player-name">#${index + 1} ${nomeExibicao}</p>
+              <p class="player-school">${escolaExibicao}</p>
+              <span class="player-score">${pontosExibicao} pts</span>
+            </div>
+          `;
+
+          top4Grid.appendChild(card);
+        });
+      } else {
+        top4Grid.innerHTML = `
+          <p style="text-align: center; font-size: 22px; color: #ffffff;">
+            Nenhum classificado encontrado.
+          </p>
+        `;
+      }
+
+    });
+
+
+    // =====================================================
     // FIM DO QUIZ - MENSAGEM DE SUSPENSE
     // =====================================================
 
@@ -376,6 +455,7 @@
       // Oculta outras telas e mostra APENAS a tela de suspense
       quizScreen.style.display = "none";
       rankingContainer.style.display = "none";
+      top4Container.style.display = "none";
       podiumContainer.style.display = "none";
       prePodiumContainer.style.display = "block";
 
@@ -417,4 +497,3 @@
 
 </body>
 </html>
-
