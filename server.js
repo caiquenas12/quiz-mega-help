@@ -1066,41 +1066,347 @@ const bancoDePerguntasCompleto = [
 { tema: "Biologia", question: "Qual microorganismo é utilizado na produção de pão e de algumas bebidas fermentadas?", options: ["Vírus", "Bactéria", "Levedura", "Protozoário"], correct: 2, tempo: 20 }
 ];
 
-// Exemplo de quando a Pergunta 10 termina ou quando o ranking é solicitado
-socket.on("obter_ranking", () => {
-  // Ordena os alunos por pontuação
-  const alunosOrdenados = Object.values(jogadores).sort((a, b) => b.pontos - a.pontos);
+// =====================================================
+// ESTADO GLOBAL DO SERVIDOR
+// =====================================================
+let perguntas = []; // 18 perguntas no total (10 na Rodada 1 + 8 na Rodada 2)
+let jogadores = {}; 
+let socketParaJogadorKey = {}; 
+let perguntaAtualIndex = -1;
+let tempoRestante = 0;
+let timerInterval = null;
+let quizFinalizado = false;
+let isStartingQuestion = false;
 
-  // Se estivermos ao final da 10ª pergunta (fim da 1ª Rodada)
-  if (perguntaAtualIndex === 9) { // Considera index 0 para Pergunta 1 e 9 para Pergunta 10
+// Controle das Rodadas, Finalistas e Bloqueios
+let rodadaAtual = 1; // 1 = Classificatória, 2 = Final
+let finalistasChaves = []; 
+let jogadoresEliminados = new Set(); 
+
+// =====================================================
+// SORTEIO INTELIGENTE (18 QUESTÕES)
+// =====================================================
+function sortearPerguntasSemRepetirTema() {
+  const TOTAL_QUESTOES = 18; 
+  const porTema = {};
+
+  bancoDePerguntasCompleto.forEach(q => {
+    if (!porTema[q.tema]) porTema[q.tema] = [];
+    porTema[q.tema].push({ ...q });
+  });
+
+  Object.keys(porTema).forEach(tema => {
+    porTema[tema].sort(() => Math.random() - 0.5);
+  });
+
+  const selecionadas = [];
+  const temasDisponiveis = Object.keys(porTema);
+  let cicloTemas = [...temasDisponiveis].sort(() => Math.random() - 0.5);
+
+  while (selecionadas.length < TOTAL_QUESTOES) {
+    if (cicloTemas.length === 0) {
+      cicloTemas = [...temasDisponiveis].sort(() => Math.random() - 0.5);
+    }
+
+    const temaAtual = cicloTemas.pop();
+
+    if (porTema[temaAtual] && porTema[temaAtual].length > 0) {
+      const perguntaExtraida = porTema[temaAtual].pop();
+      selecionadas.push(perguntaExtraida);
+    }
+  }
+
+  selecionadas.forEach((q, index) => {
+    q.numero = index + 1;
+  });
+
+  perguntas = selecionadas;
+  console.log(`🎲 Sorteio realizado! 18 perguntas preparadas (10 na Rodada 1 e 8 na Rodada 2).`);
+}
+
+sortearPerguntasSemRepetirTema();
+
+// =====================================================
+// FUNÇÕES AUXILIARES
+// =====================================================
+
+function obterRankingOrdenado() {
+  return Object.values(jogadores).sort((a, b) => b.pontos - a.pontos);
+}
+
+function iniciarCronometro() {
+  clearInterval(timerInterval);
+
+  timerInterval = setInterval(() => {
+    tempoRestante--;
+    io.emit("tick_tempo", tempoRestante);
+
+    if (tempoRestante <= 0) {
+      clearInterval(timerInterval);
+
+      const todosOrdenados = obterRankingOrdenado();
+      const qAtual = perguntas[perguntaAtualIndex];
+
+      // Define limite dinâmico: 4 para Rodada 2, 12 para Rodada 1
+      const limiteRanking = (rodadaAtual === 2) ? 4 : 12;
+
+      console.log(`⏱️ Tempo esgotado na pergunta ${perguntaAtualIndex + 1}. Enviando Top ${limiteRanking}.`);
+
+      io.emit("tempo_esgotado", {
+        respostaCorreta: qAtual ? qAtual.correct : 0,
+        ranking: todosOrdenados.slice(0, limiteRanking),
+        rodada: rodadaAtual,
+        limite: limiteRanking // <-- Envia 12 ou 4 para o Frontend
+      });
+    }
+  }, 1000);
+}
+
+function sanitizarEntrada(texto, fallback) {
+  if (typeof texto !== "string" || !texto.trim()) return fallback;
+  return texto.trim().substring(0, 40);
+}
+
+// =====================================================
+// EVENTOS DO SOCKET.IO
+// =====================================================
+io.on('connection', (socket) => {
+  console.log(`🔌 Novo cliente conectado: ${socket.id}`);
+
+  // 1. REGISTRO / RECONEXÃO DO JOGADOR
+  socket.on('entrar_quiz', (data = {}) => {
+    const fotoPadrao = "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+    const nomeTratado = sanitizarEntrada(data.nome, 'Aluno');
+    const escolaTratada = sanitizarEntrada(data.escola, 'Escola Geral');
     
-    // Separa os 4 primeiros
-    const top4 = alunosOrdenados.slice(0, 4);
-    const idsTop4 = new Set(top4.map(aluno => aluno.socketId));
+    const chaveJogador = `${nomeTratado.toLowerCase()}_${escolaTratada.toLowerCase()}`;
+    socketParaJogadorKey[socket.id] = chaveJogador;
 
-    // Percorre todos os participantes conectados
-    Object.values(jogadores).forEach(aluno => {
-      if (idsTop4.has(aluno.socketId)) {
-        // Notifica quem PASSOU para o TOP 4
-        io.to(aluno.socketId).emit("classificado_top4", {
-          mensagem: "🔥 Parabéns! Você está classificado para o TOP 4!"
+    // BLOQUEIO 1: Se o jogador já foi marcado como eliminado
+    if (jogadoresEliminados.has(chaveJogador)) {
+      console.log(`🚫 Entrada recusada (Aluno eliminado): ${nomeTratado}`);
+      socket.emit('aluno_eliminado');
+      socket.disconnect(true);
+      return;
+    }
+
+    // TENTATIVA DE RECONEXÃO DE QUEM JÁ ESTAVA REGISTRADO
+    if (jogadores[chaveJogador]) {
+      jogadores[chaveJogador].socketId = socket.id;
+      console.log(`🔄 Aluno reconectado: ${nomeTratado} (${escolaTratada})`);
+    } else {
+      // BLOQUEIO 2: SE O JOGO JÁ COMEÇOU (Pergunta 1 em diante) -> BLOQUEIA NOVOS APARELHOS
+      if (perguntaAtualIndex >= 0) {
+        console.log(`🚫 Entrada recusada para novo aparelho (Partida em andamento): ${nomeTratado}`);
+        jogadoresEliminados.add(chaveJogador);
+        socket.emit('aluno_eliminado');
+        socket.disconnect(true);
+        return;
+      }
+
+      // Se o jogo ainda NÃO começou (perguntaAtualIndex === -1), registra normalmente
+      jogadores[chaveJogador] = {
+        socketId: socket.id,
+        chave: chaveJogador,
+        nome: nomeTratado,
+        escola: escolaTratada,
+        foto: (data.foto && typeof data.foto === 'string' && data.foto.trim() !== "" && data.foto !== "null")
+          ? data.foto.trim()
+          : fotoPadrao,
+        pontos: 0,
+        respondeu: false
+      };
+      console.log(`👤 Novo aluno registrado (Pré-jogo): ${nomeTratado} (${escolaTratada})`);
+    }
+
+    // Se passou pelas validações acima, envia a pergunta atual (ou tela de eliminado se for rodada 2)
+    if (perguntaAtualIndex >= 0 && perguntaAtualIndex < perguntas.length && !quizFinalizado) {
+      if (rodadaAtual === 1 || finalistasChaves.includes(chaveJogador)) {
+        socket.emit('nova_pergunta', perguntas[perguntaAtualIndex]);
+      } else {
+        socket.emit('aluno_eliminado');
+        socket.disconnect(true);
+      }
+    }
+  });
+
+  // 2. SOLICITAÇÃO DE RANKING OU TELA FINAL
+  socket.on('obter_ranking', () => {
+    const todosOrdenados = obterRankingOrdenado();
+
+    if (perguntaAtualIndex >= perguntas.length - 1) {
+      quizFinalizado = true;
+      const top3 = todosOrdenados.slice(0, 3);
+      console.log("🏆 ENVIANDO PÓDIO FINAL:", top3);
+      io.emit("fim_quiz", { podium: top3 });
+    } else {
+      // Se estiver na Rodada 2, exibe apenas os 4 finalistas no telão. Caso contrário, exibe o Top 12.
+      const limiteRanking = (rodadaAtual === 2) ? 4 : 12;
+      const rankingFiltrado = todosOrdenados.slice(0, limiteRanking);
+
+      console.log(`📊 TOP ${limiteRanking} ENVIADO PARA O TELÃO (Rodada ${rodadaAtual}):`, rankingFiltrado.length, "participantes");
+      
+      io.emit('mostrar_ranking', { 
+        ranking: rankingFiltrado, 
+        rodada: rodadaAtual,
+        limite: limiteRanking // <-- Envia 12 ou 4 para o Frontend
+      });
+    }
+  });
+
+  // 3. AVANÇAR PARA A PRÓXIMA PERGUNTA
+  socket.on('proxima_pergunta', () => {
+    if (quizFinalizado || isStartingQuestion) return;
+
+    isStartingQuestion = true;
+    perguntaAtualIndex++;
+
+    // CORTE NA PERGUNTA 10: Transição para a Rodada 2
+    if (perguntaAtualIndex === 10 && rodadaAtual === 1) {
+      rodadaAtual = 2;
+      const ranking = obterRankingOrdenado();
+      
+      // Define os 4 primeiros
+      finalistasChaves = ranking.slice(0, 4).map(j => j.chave);
+
+      console.log("🚨 FIM DA RODADA 1! TOP 4 DEFINIDOS:", finalistasChaves);
+
+      // Bloqueia no servidor e envia notificação para quem NÃO é top 4
+      Object.values(jogadores).forEach(j => {
+        if (!finalistasChaves.includes(j.chave)) {
+          jogadoresEliminados.add(j.chave);
+        }
+
+        if (j.socketId) {
+          const socketCliente = io.sockets.sockets.get(j.socketId);
+
+          if (finalistasChaves.includes(j.chave)) {
+            io.to(j.socketId).emit('aluno_classificado_top4');
+          } else {
+            io.to(j.socketId).emit('aluno_eliminado');
+            if (socketCliente) {
+              socketCliente.disconnect(true); // Desconecta o celular de quem não passou
+            }
+          }
+        }
+      });
+
+      // Notifica o telão para exibir a mensagem e os 4 finalistas
+      io.emit('anunciar_top4', { 
+        mensagem: "2° rodada mais 8 questões para os 4 primeiros",
+        top4: ranking.slice(0, 4),
+        limite: 4
+      });
+
+      perguntaAtualIndex = 9;
+      isStartingQuestion = false;
+      return;
+    }
+
+    if (perguntaAtualIndex < perguntas.length) {
+      const q = perguntas[perguntaAtualIndex];
+      tempoRestante = q.tempo;
+
+      Object.keys(jogadores).forEach(key => {
+        if (jogadores[key]) {
+          jogadores[key].respondeu = false;
+        }
+      });
+
+      console.log(`❓ Pergunta ${perguntaAtualIndex + 1}/${perguntas.length} [Rodada ${rodadaAtual}]: ${q.question}`);
+      
+      io.emit('nova_pergunta', q);
+      iniciarCronometro();
+    } else {
+      quizFinalizado = true;
+      const top3 = obterRankingOrdenado().slice(0, 3);
+      console.log("🏁 QUIZ FINALIZADO! ENVIANDO PÓDIO FINAL.");
+      io.emit("fim_quiz", { podium: top3 });
+    }
+
+    isStartingQuestion = false;
+  });
+
+  // 4. REINICIAR QUIZ
+  socket.on('reiniciar_quiz', () => {
+    perguntaAtualIndex = -1;
+    rodadaAtual = 1;
+    finalistasChaves = [];
+    jogadoresEliminados.clear(); // Limpa todos os bloqueios para uma nova partida
+    quizFinalizado = false;
+    isStartingQuestion = false;
+    clearInterval(timerInterval);
+
+    jogadores = {}; 
+    socketParaJogadorKey = {};
+
+    sortearPerguntasSemRepetirTema();
+
+    console.log("🔄 Quiz reiniciado! Entrada liberada para novos aparelhos.");
+    io.emit('quiz_reiniciado');
+    io.emit('resetar_aluno'); 
+  });
+
+  // 5. RECEBER RESPOSTA DO PARTICIPANTE
+  socket.on('enviar_resposta', (index) => {
+    const chave = socketParaJogadorKey[socket.id];
+    const jogador = jogadores[chave];
+    const q = perguntas[perguntaAtualIndex];
+
+    // Trava de segurança: Bloqueia respostas de quem não é TOP 4 na Rodada 2
+    if (rodadaAtual === 2 && !finalistasChaves.includes(chave)) {
+      console.log(`🚫 Resposta ignorada para aluno fora da final.`);
+      return;
+    }
+
+    if (jogador && !jogador.respondeu && q && !quizFinalizado && tempoRestante > 0) {
+      jogador.respondeu = true;
+
+      if (Number(index) === q.correct) {
+        const pontosGanhos = 10 + tempoRestante;
+        jogador.pontos += pontosGanhos;
+
+        socket.emit('resultado_resposta', {
+          correto: true,
+          pontos: pontosGanhos,
+          totalPontos: jogador.pontos
         });
       } else {
-        // Notifica quem FOI ELIMINADO para retornar à tela inicial
-        io.to(aluno.socketId).emit("eliminado_retornar_inicio", {
-          mensagem: "Obrigado por participar! Você não avançou para o TOP 4."
+        socket.emit('resultado_resposta', {
+          correto: false,
+          pontos: 0,
+          totalPontos: jogador.pontos
         });
-        
-        // Opcional: remove o participante dos ativos no servidor
-        delete jogadores[aluno.socketId];
       }
-    });
+    }
+  });
 
-    // Envia o anúncio do TOP 4 para o Telão
-    io.emit("anunciar_top4", { top4: top4 });
+  // 6. DESCONEXÕES
+  socket.on('aluno_desconectou_manual', () => {
+    const chave = socketParaJogadorKey[socket.id];
+    if (chave) {
+      jogadoresEliminados.add(chave); // Bloqueia para não voltar no mesmo quiz
+      delete jogadores[chave];
+      delete socketParaJogadorKey[socket.id];
+      console.log(`🚪 Aluno desconectou manualmente e foi bloqueado: ${chave}`);
+    }
+  });
 
-  } else {
-    // Caso contrário, apenas exibe o ranking normal no Telão
-    io.emit("mostrar_ranking", { ranking: alunosOrdenados.slice(0, 12) });
-  }
+  socket.on('disconnect', () => {
+    const chave = socketParaJogadorKey[socket.id];
+    if (chave && jogadores[chave]) {
+      delete socketParaJogadorKey[socket.id];
+    }
+  });
+});
+
+// =====================================================
+// INICIALIZAÇÃO
+// =====================================================
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`=====================================================`);
+  console.log(`🚀 SERVIDOR RODANDO EM http://localhost:${PORT}`);
+  console.log(`=====================================================`);
 });
