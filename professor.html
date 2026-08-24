@@ -42,10 +42,10 @@
     </div>
 
 
-    <!-- TELA DO RANKING PARCIAL -->
+    <!-- TELA DO RANKING PARCIAL (COM TÍTULO DINÂMICO) -->
     <div id="ranking-container" style="display: none;">
 
-      <h1 style="color: #ff5722; text-align: center; margin: 0 0 20px 0;">
+      <h1 id="titulo-ranking" style="color: #ff5722; text-align: center; margin: 0 0 20px 0;">
         🏆 RANKING PARCIAL - TOP 12
       </h1>
 
@@ -111,6 +111,7 @@
     const quizScreen = document.getElementById("quiz-screen");
     const rankingContainer = document.getElementById("ranking-container");
     const rankingGrid = document.getElementById("ranking-grid");
+    const tituloRanking = document.getElementById("titulo-ranking");
     const top4Container = document.getElementById("top4-container");
     const top4Mensagem = document.getElementById("top4-mensagem");
     const top4Grid = document.getElementById("top4-grid");
@@ -302,6 +303,12 @@
 
       cronometroEl.textContent = "⌛ TEMPO ESGOTADO!";
 
+      // Atualiza o título do ranking dinamicamente se o limite for enviado
+      if (tituloRanking) {
+        const limite = data?.limite || (data?.rodada === 2 ? 4 : 12);
+        tituloRanking.textContent = `🏆 RANKING PARCIAL - TOP ${limite}`;
+      }
+
       const botoes = document.querySelectorAll("#options .option-btn");
       let idxCorreto = Number(data?.respostaCorreta);
 
@@ -329,10 +336,16 @@
 
 
     // =====================================================
-    // RECEBER E MOSTRAR RANKING TOP 12
+    // RECEBER E MOSTRAR RANKING (DINÂMICO: TOP 12 OU TOP 4)
     // =====================================================
 
     socket.on("mostrar_ranking", (data) => {
+
+      // Atualiza o título dinamicamente (TOP 12 na Rodada 1 / TOP 4 na Rodada 2)
+      if (tituloRanking) {
+        const limite = data?.limite || (data?.rodada === 2 ? 4 : 12);
+        tituloRanking.textContent = `🏆 RANKING PARCIAL - TOP ${limite}`;
+      }
 
       rankingGrid.innerHTML = "";
       let lista = [];
