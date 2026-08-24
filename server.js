@@ -1247,11 +1247,16 @@ io.on('connection', (socket) => {
         }
       });
 
-      // Notifica o telão para exibir os 4 finalistas e a frase da 2ª rodada
+      // Notifica o telão para exibir a mensagem e os 4 finalistas
       io.emit('anunciar_top4', { 
         mensagem: "2° rodada mais 8 questões para os 4 primeiros",
         top4: ranking.slice(0, 4) 
       });
+
+      // Zera a trava e ajusta o índice para que o próximo Enter no telão chame a pergunta 11 (índice 10)
+      perguntaAtualIndex = 9;
+      isStartingQuestion = false;
+      return;
     }
 
     if (perguntaAtualIndex < perguntas.length) {
@@ -1360,4 +1365,3 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 SERVIDOR RODANDO EM http://localhost:${PORT}`);
   console.log(`=====================================================`);
 });
-
