@@ -1247,8 +1247,11 @@ io.on('connection', (socket) => {
         }
       });
 
-      // Notifica o telão para exibir os 4 finalistas antes de entrar na pergunta 11
-      io.emit('anunciar_top4', { top4: ranking.slice(0, 4) });
+      // Notifica o telão para exibir os 4 finalistas e a frase da 2ª rodada
+      io.emit('anunciar_top4', { 
+        mensagem: "2° rodada mais 8 questões para os 4 primeiros",
+        top4: ranking.slice(0, 4) 
+      });
     }
 
     if (perguntaAtualIndex < perguntas.length) {
