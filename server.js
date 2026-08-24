@@ -1147,14 +1147,16 @@ function iniciarCronometro() {
       const todosOrdenados = obterRankingOrdenado();
       const qAtual = perguntas[perguntaAtualIndex];
 
-      console.log(`⏱️ Tempo esgotado na pergunta ${perguntaAtualIndex + 1}.`);
+      // Define limite dinâmico: 4 para Rodada 2, 12 para Rodada 1
+      const limiteRanking = (rodadaAtual === 2) ? 4 : 12;
 
-      // Limita o ranking no tempo esgotado conforme a rodada
-      const limiteTempoEsgotado = (rodadaAtual === 2) ? 4 : 12;
+      console.log(`⏱️ Tempo esgotado na pergunta ${perguntaAtualIndex + 1}. Enviando Top ${limiteRanking}.`);
 
       io.emit("tempo_esgotado", {
         respostaCorreta: qAtual ? qAtual.correct : 0,
-        ranking: todosOrdenados.slice(0, limiteTempoEsgotado)
+        ranking: todosOrdenados.slice(0, limiteRanking),
+        rodada: rodadaAtual,
+        limite: limiteRanking // <-- Envia 12 ou 4 para o Frontend
       });
     }
   }, 1000);
@@ -1243,7 +1245,12 @@ io.on('connection', (socket) => {
       const rankingFiltrado = todosOrdenados.slice(0, limiteRanking);
 
       console.log(`📊 TOP ${limiteRanking} ENVIADO PARA O TELÃO (Rodada ${rodadaAtual}):`, rankingFiltrado.length, "participantes");
-      io.emit('mostrar_ranking', { ranking: rankingFiltrado, rodada: rodadaAtual });
+      
+      io.emit('mostrar_ranking', { 
+        ranking: rankingFiltrado, 
+        rodada: rodadaAtual,
+        limite: limiteRanking // <-- Envia 12 ou 4 para o Frontend
+      });
     }
   });
 
@@ -1287,7 +1294,8 @@ io.on('connection', (socket) => {
       // Notifica o telão para exibir a mensagem e os 4 finalistas
       io.emit('anunciar_top4', { 
         mensagem: "2° rodada mais 8 questões para os 4 primeiros",
-        top4: ranking.slice(0, 4) 
+        top4: ranking.slice(0, 4),
+        limite: 4
       });
 
       perguntaAtualIndex = 9;
