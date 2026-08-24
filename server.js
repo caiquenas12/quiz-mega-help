@@ -1181,6 +1181,7 @@ io.on('connection', (socket) => {
     if (jogadoresEliminados.has(chaveJogador)) {
       console.log(`🚫 Entrada recusada (Aluno eliminado): ${nomeTratado}`);
       socket.emit('aluno_eliminado');
+      socket.disconnect(true);
       return;
     }
 
@@ -1194,6 +1195,7 @@ io.on('connection', (socket) => {
         console.log(`🚫 Entrada recusada para novo aparelho (Partida em andamento): ${nomeTratado}`);
         jogadoresEliminados.add(chaveJogador);
         socket.emit('aluno_eliminado');
+        socket.disconnect(true);
         return;
       }
 
@@ -1218,6 +1220,7 @@ io.on('connection', (socket) => {
         socket.emit('nova_pergunta', perguntas[perguntaAtualIndex]);
       } else {
         socket.emit('aluno_eliminado');
+        socket.disconnect(true);
       }
     }
   });
@@ -1262,10 +1265,15 @@ io.on('connection', (socket) => {
         }
 
         if (j.socketId) {
+          const socketCliente = io.sockets.sockets.get(j.socketId);
+
           if (finalistasChaves.includes(j.chave)) {
             io.to(j.socketId).emit('aluno_classificado_top4');
           } else {
             io.to(j.socketId).emit('aluno_eliminado');
+            if (socketCliente) {
+              socketCliente.disconnect(true); // Desconecta o celular de quem não passou
+            }
           }
         }
       });
