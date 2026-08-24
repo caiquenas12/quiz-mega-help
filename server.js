@@ -1149,9 +1149,12 @@ function iniciarCronometro() {
 
       console.log(`⏱️ Tempo esgotado na pergunta ${perguntaAtualIndex + 1}.`);
 
+      // Limita o ranking no tempo esgotado conforme a rodada
+      const limiteTempoEsgotado = (rodadaAtual === 2) ? 4 : 12;
+
       io.emit("tempo_esgotado", {
         respostaCorreta: qAtual ? qAtual.correct : 0,
-        ranking: todosOrdenados.slice(0, 12)
+        ranking: todosOrdenados.slice(0, limiteTempoEsgotado)
       });
     }
   }, 1000);
@@ -1235,9 +1238,12 @@ io.on('connection', (socket) => {
       console.log("🏆 ENVIANDO PÓDIO FINAL:", top3);
       io.emit("fim_quiz", { podium: top3 });
     } else {
-      const rankingTop12 = todosOrdenados.slice(0, 12);
-      console.log("📊 TOP 12 ENVIADO PARA O TELÃO:", rankingTop12.length, "participantes");
-      io.emit('mostrar_ranking', { ranking: rankingTop12, rodada: rodadaAtual });
+      // Se estiver na Rodada 2, exibe apenas os 4 finalistas no telão. Caso contrário, exibe o Top 12.
+      const limiteRanking = (rodadaAtual === 2) ? 4 : 12;
+      const rankingFiltrado = todosOrdenados.slice(0, limiteRanking);
+
+      console.log(`📊 TOP ${limiteRanking} ENVIADO PARA O TELÃO (Rodada ${rodadaAtual}):`, rankingFiltrado.length, "participantes");
+      io.emit('mostrar_ranking', { ranking: rankingFiltrado, rodada: rodadaAtual });
     }
   });
 
