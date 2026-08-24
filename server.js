@@ -1066,11 +1066,10 @@ const bancoDePerguntasCompleto = [
 { tema: "Biologia", question: "Qual microorganismo é utilizado na produção de pão e de algumas bebidas fermentadas?", options: ["Vírus", "Bactéria", "Levedura", "Protozoário"], correct: 2, tempo: 20 }
 ];
 
-
 // =====================================================
 // ESTADO GLOBAL DO SERVIDOR
 // =====================================================
-let perguntas = []; // Receberá as 20 perguntas sorteadas da rodada
+let perguntas = []; // Receberá as 18 perguntas (10 da Rodada 1 + 8 da Rodada 2)
 let jogadores = {}; // Armazena por chave única do jogador
 let socketParaJogadorKey = {}; // Mapeia socket.id -> chave do jogador
 let perguntaAtualIndex = -1;
@@ -1079,55 +1078,54 @@ let timerInterval = null;
 let quizFinalizado = false;
 let isStartingQuestion = false;
 
+// Controle das Rodadas e Finalistas
+let rodadaAtual = 1; // 1 = Primeira Fase, 2 = Segunda Fase (Final)
+let finalistasChaves = []; // Armazena as chaves dos 4 alunos classificados
+
 // =====================================================
-// FUNÇÃO DE SORTEIO INTELIGENTE (20 QUESTÕES SEM REPETIR TEMA)
+// FUNÇÃO DE SORTEIO INTELIGENTE (18 QUESTÕES NO TOTAL)
 // =====================================================
-function sortear20PerguntasSemRepetirTema() {
-  // 1. Agrupa o banco de dados por tema
+function sortearPerguntasSemRepetirTema() {
+  const TOTAL_QUESTOES = 18; // 10 para Rodada 1 + 8 para Rodada 2
   const porTema = {};
+
   bancoDePerguntasCompleto.forEach(q => {
     if (!porTema[q.tema]) porTema[q.tema] = [];
-    // Faz uma cópia rasa para não alterar o array original
     porTema[q.tema].push({ ...q });
   });
 
-  // Embaralha as perguntas dentro de cada tema
   Object.keys(porTema).forEach(tema => {
     porTema[tema].sort(() => Math.random() - 0.5);
   });
 
   const selecionadas = [];
   const temasDisponiveis = Object.keys(porTema);
-
   let cicloTemas = [...temasDisponiveis].sort(() => Math.random() - 0.5);
 
-  // 2. Seleciona 20 perguntas alternando entre os temas
-  while (selecionadas.length < 20) {
+  while (selecionadas.length < TOTAL_QUESTOES) {
     if (cicloTemas.length === 0) {
-      // Se usou todos os temas, reinicia o ciclo de temas de forma aleatória
       cicloTemas = [...temasDisponiveis].sort(() => Math.random() - 0.5);
     }
 
     const temaAtual = cicloTemas.pop();
 
-    // Se ainda houver perguntas desse tema
     if (porTema[temaAtual] && porTema[temaAtual].length > 0) {
       const perguntaExtraida = porTema[temaAtual].pop();
       selecionadas.push(perguntaExtraida);
     }
   }
 
-  // 3. Atualiza a numeração das perguntas sorteadas para ficar de 1 até 20
+  // Renumera as perguntas de 1 até 18
   selecionadas.forEach((q, index) => {
     q.numero = index + 1;
   });
 
   perguntas = selecionadas;
-  console.log(`🎲 Sorteio realizado! 20 perguntas preparadas para o jogo com temas alternados.`);
+  console.log(`🎲 Sorteio realizado! 18 perguntas preparadas (10 na Rodada 1 e 8 na Rodada 2).`);
 }
 
 // Executa o primeiro sorteio assim que o servidor inicia
-sortear20PerguntasSemRepetirTema();
+sortearPerguntasSemRepetirTema();
 
 // =====================================================
 // FUNÇÕES AUXILIARES
@@ -1177,19 +1175,16 @@ io.on('connection', (socket) => {
     const nomeTratado = sanitizarEntrada(data.nome, 'Aluno');
     const escolaTratada = sanitizarEntrada(data.escola, 'Escola Geral');
     
-    // Cria uma chave única baseada no nome e escola para preservar o progresso se mudar de aba
     const chaveJogador = `${nomeTratado.toLowerCase()}_${escolaTratada.toLowerCase()}`;
-
     socketParaJogadorKey[socket.id] = chaveJogador;
 
     if (jogadores[chaveJogador]) {
-      // O jogador já existia! Atualiza apenas o socket.id sem perder pontos nem progresso
       jogadores[chaveJogador].socketId = socket.id;
       console.log(`🔄 Aluno reconectado: ${nomeTratado} (${escolaTratada})`);
     } else {
-      // Novo cadastro
       jogadores[chaveJogador] = {
         socketId: socket.id,
+        chave: chaveJogador,
         nome: nomeTratado,
         escola: escolaTratada,
         foto: (data.foto && typeof data.foto === 'string' && data.foto.trim() !== "" && data.foto !== "null")
@@ -1201,9 +1196,13 @@ io.on('connection', (socket) => {
       console.log(`👤 Novo aluno registrado: ${nomeTratado} (${escolaTratada})`);
     }
 
-    // Se o quiz já estiver em andamento, envia a pergunta atual para o aluno que reconectou
+    // Se o quiz já estiver em andamento, envia a pergunta para o aluno caso esteja autorizado
     if (perguntaAtualIndex >= 0 && perguntaAtualIndex < perguntas.length && !quizFinalizado) {
-      socket.emit('nova_pergunta', perguntas[perguntaAtualIndex]);
+      if (rodadaAtual === 1 || finalistasChaves.includes(chaveJogador)) {
+        socket.emit('nova_pergunta', perguntas[perguntaAtualIndex]);
+      } else {
+        socket.emit('aluno_eliminado');
+      }
     }
   });
 
@@ -1211,6 +1210,7 @@ io.on('connection', (socket) => {
   socket.on('obter_ranking', () => {
     const todosOrdenados = obterRankingOrdenado();
 
+    // Se já passou da última pergunta (18ª)
     if (perguntaAtualIndex >= perguntas.length - 1) {
       quizFinalizado = true;
       const top3 = todosOrdenados.slice(0, 3);
@@ -1219,16 +1219,41 @@ io.on('connection', (socket) => {
     } else {
       const rankingTop12 = todosOrdenados.slice(0, 12);
       console.log("📊 TOP 12 ENVIADO PARA O TELÃO:", rankingTop12.length, "participantes");
-      io.emit('mostrar_ranking', { ranking: rankingTop12 });
+      io.emit('mostrar_ranking', { ranking: rankingTop12, rodada: rodadaAtual });
     }
   });
 
-  // 3. AVANÇAR PARA A PRÓXIMA PERGUNTA
+  // 3. AVANÇAR PARA A PRÓXIMA PERGUNTA (DISPARADO PELO TELÃO/CONTROLADOR)
   socket.on('proxima_pergunta', () => {
     if (quizFinalizado || isStartingQuestion) return;
 
     isStartingQuestion = true;
     perguntaAtualIndex++;
+
+    // VERIFICAÇÃO DE CORTE: Ao chegar na 10ª pergunta concluída (Índice 10 = Pergunta 11)
+    if (perguntaAtualIndex === 10 && rodadaAtual === 1) {
+      rodadaAtual = 2;
+      const ranking = obterRankingOrdenado();
+      
+      // Filtra e armazena as chaves dos 4 primeiros colocados
+      finalistasChaves = ranking.slice(0, 4).map(j => j.chave);
+
+      console.log("🚨 FIM DA RODADA 1! FINALISTAS DEFINIDOS (TOP 4):", finalistasChaves);
+
+      // Notifica o telão sobre os 4 classificados
+      io.emit('anunciar_top4', { top4: ranking.slice(0, 4) });
+
+      // Notifica individualmente cada celular sobre a classificação ou eliminação
+      Object.values(jogadores).forEach(j => {
+        if (j.socketId) {
+          if (finalistasChaves.includes(j.chave)) {
+            io.to(j.socketId).emit('aluno_classificado_top4');
+          } else {
+            io.to(j.socketId).emit('aluno_eliminado');
+          }
+        }
+      });
+    }
 
     if (perguntaAtualIndex < perguntas.length) {
       const q = perguntas[perguntaAtualIndex];
@@ -1240,8 +1265,21 @@ io.on('connection', (socket) => {
         }
       });
 
-      console.log(`❓ Iniciando Pergunta ${perguntaAtualIndex + 1}/${perguntas.length} [Tema: ${q.tema}]: ${q.question}`);
-      io.emit('nova_pergunta', q);
+      console.log(`❓ Iniciando Pergunta ${perguntaAtualIndex + 1}/${perguntas.length} [Rodada ${rodadaAtual}] [Tema: ${q.tema}]: ${q.question}`);
+      
+      // Se estiver na Rodada 2, envia a pergunta apenas para os 4 finalistas
+      if (rodadaAtual === 2) {
+        Object.values(jogadores).forEach(j => {
+          if (j.socketId && finalistasChaves.includes(j.chave)) {
+            io.to(j.socketId).emit('nova_pergunta', q);
+          }
+        });
+        // O telão sempre recebe todas as perguntas
+        io.emit('nova_pergunta_telao', q); 
+      } else {
+        io.emit('nova_pergunta', q);
+      }
+
       iniciarCronometro();
     } else {
       quizFinalizado = true;
@@ -1256,6 +1294,8 @@ io.on('connection', (socket) => {
   // 4. REINICIAR QUIZ
   socket.on('reiniciar_quiz', () => {
     perguntaAtualIndex = -1;
+    rodadaAtual = 1;
+    finalistasChaves = [];
     quizFinalizado = false;
     isStartingQuestion = false;
     clearInterval(timerInterval);
@@ -1263,19 +1303,24 @@ io.on('connection', (socket) => {
     jogadores = {}; 
     socketParaJogadorKey = {};
 
-    // Sortear um novo pacote de 20 perguntas para a próxima partida
-    sortear20PerguntasSemRepetirTema();
+    sortearPerguntasSemRepetirTema();
 
     console.log("🔄 Quiz reiniciado com novo sorteio de perguntas.");
     io.emit('quiz_reiniciado');
     io.emit('resetar_aluno'); 
   });
 
-  // 5. RECEBER RESPOSTA DO PARTICIPANTE
+  // 5. RECEBER RESPOSTA DO PARTICIPANTE (COM TRAVA DE FINALISTAS)
   socket.on('enviar_resposta', (index) => {
     const chave = socketParaJogadorKey[socket.id];
     const jogador = jogadores[chave];
     const q = perguntas[perguntaAtualIndex];
+
+    // Se estiver na Rodada 2 e o jogador não for um dos 4 finalistas, ignora a resposta
+    if (rodadaAtual === 2 && !finalistasChaves.includes(chave)) {
+      console.log(`🚫 Resposta bloqueada para ${jogador ? jogador.nome : 'Desconhecido'} (Eliminado na 1ª fase).`);
+      return;
+    }
 
     if (jogador && !jogador.respondeu && q && !quizFinalizado && tempoRestante > 0) {
       jogador.respondeu = true;
@@ -1315,7 +1360,6 @@ io.on('connection', (socket) => {
     if (chave && jogadores[chave]) {
       console.log(`⚠️ Sinal oscilou para: ${jogadores[chave].nome} (${socket.id}). Dados preservados no servidor.`);
       delete socketParaJogadorKey[socket.id];
-      // O jogador PERMANECE salvo em 'jogadores[chave]', mantendo pontos e nome
     } else {
       console.log(`❌ Cliente não registrado desconectado: ${socket.id}`);
     }
