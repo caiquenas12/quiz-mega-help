@@ -1066,27 +1066,41 @@ const bancoDePerguntasCompleto = [
 { tema: "Biologia", question: "Qual microorganismo é utilizado na produção de pão e de algumas bebidas fermentadas?", options: ["Vírus", "Bactéria", "Levedura", "Protozoário"], correct: 2, tempo: 20 }
 ];
 
-// Escuta o aviso de eliminação ao final da 10ª pergunta
-socket.on("eliminado_retornar_inicio", (data) => {
-  // Exibe um aviso amigável para o aluno
-  alert(data.mensagem || "Obrigado por participar do Mega Help!");
+// Exemplo de quando a Pergunta 10 termina ou quando o ranking é solicitado
+socket.on("obter_ranking", () => {
+  // Ordena os alunos por pontuação
+  const alunosOrdenados = Object.values(jogadores).sort((a, b) => b.pontos - a.pontos);
 
-  // OPÇÃO A: Se a tela de cadastro for apenas uma div que é mostrada/escondida:
-  // Esconde a tela de perguntas e mostra a tela inicial de login/cadastro
-  document.getElementById("tela-quiz-aluno").style.display = "none";
-  document.getElementById("tela-login-aluno").style.display = "block";
+  // Se estivermos ao final da 10ª pergunta (fim da 1ª Rodada)
+  if (perguntaAtualIndex === 9) { // Considera index 0 para Pergunta 1 e 9 para Pergunta 10
+    
+    // Separa os 4 primeiros
+    const top4 = alunosOrdenados.slice(0, 4);
+    const idsTop4 = new Set(top4.map(aluno => aluno.socketId));
 
-  // Reseta os campos de input do aluno
-  document.getElementById("nome-input").value = "";
-  document.getElementById("escola-input").value = "";
-  document.getElementById("foto-input").value = "";
+    // Percorre todos os participantes conectados
+    Object.values(jogadores).forEach(aluno => {
+      if (idsTop4.has(aluno.socketId)) {
+        // Notifica quem PASSOU para o TOP 4
+        io.to(aluno.socketId).emit("classificado_top4", {
+          mensagem: "🔥 Parabéns! Você está classificado para o TOP 4!"
+        });
+      } else {
+        // Notifica quem FOI ELIMINADO para retornar à tela inicial
+        io.to(aluno.socketId).emit("eliminado_retornar_inicio", {
+          mensagem: "Obrigado por participar! Você não avançou para o TOP 4."
+        });
+        
+        // Opcional: remove o participante dos ativos no servidor
+        delete jogadores[aluno.socketId];
+      }
+    });
 
-  // OPÇÃO B: Se quiser dar um reset completo na página do aluno:
-  // location.reload();
-});
+    // Envia o anúncio do TOP 4 para o Telão
+    io.emit("anunciar_top4", { top4: top4 });
 
-// Escuta o aviso de classificação para o TOP 4 (caso queira mostrar uma mensagem especial para eles)
-socket.on("classificado_top4", (data) => {
-  alert(data.mensagem);
-  // Mantém o aluno na tela de espera da próxima pergunta
+  } else {
+    // Caso contrário, apenas exibe o ranking normal no Telão
+    io.emit("mostrar_ranking", { ranking: alunosOrdenados.slice(0, 12) });
+  }
 });
