@@ -237,6 +237,45 @@
       }
     });
 
+    // =====================================================
+    // EVENTO: ELIMINAÇÃO AO FIM DA 10ª PERGUNTA (RETORNAR AO INÍCIO)
+    // =====================================================
+    socket.on("eliminado_retornar_inicio", (data) => {
+      // 1. Limpa o storage para impedir que reconecte sozinho
+      localStorage.removeItem("quiz_aluno_nome");
+      localStorage.removeItem("quiz_aluno_escola");
+      localStorage.removeItem("quiz_aluno_foto");
+
+      // 2. Limpa formulários
+      document.getElementById("nome").value = "";
+      document.getElementById("escola").value = "";
+      document.getElementById("foto-input").value = "";
+      fotoBase64 = "";
+      document.getElementById("preview-foto").src = FOTO_PADRAO;
+
+      // 3. Reseta estados da interface de jogo
+      document.getElementById("status").textContent = "Aguardando a pergunta...";
+      document.getElementById("options-aluno").innerHTML = "";
+      document.getElementById("question-container").style.display = "none";
+      document.getElementById("feedback").textContent = "";
+      document.getElementById("placar-total").textContent = "";
+
+      // 4. Retorna para a tela de login
+      document.getElementById("game-screen").style.display = "none";
+      document.getElementById("login-screen").style.display = "block";
+
+      // 5. Exibe aviso ao aluno
+      alert(data?.mensagem || "Obrigado por participar! Você não avançou para o TOP 4.");
+    });
+
+    // =====================================================
+    // EVENTO: CLASSIFICAÇÃO PARA A 2ª RODADA (TOP 4)
+    // =====================================================
+    socket.on("classificado_top4", (data) => {
+      alert(data?.mensagem || "🔥 Parabéns! Você está classificado para o TOP 4!");
+      document.getElementById("status").textContent = "🔥 Você está na 2ª Rodada! Aguarde a próxima pergunta...";
+    });
+
     socket.on("quiz_reiniciado", () => {
       document.getElementById("status").textContent = "Aguardando o professor iniciar...";
       document.getElementById("options-aluno").innerHTML = "";
