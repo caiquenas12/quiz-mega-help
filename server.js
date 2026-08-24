@@ -1069,9 +1069,9 @@ const bancoDePerguntasCompleto = [
 // =====================================================
 // ESTADO GLOBAL DO SERVIDOR
 // =====================================================
-let perguntas = []; // Receberá as 18 perguntas (10 da Rodada 1 + 8 da Rodada 2)
-let jogadores = {}; // Armazena por chave única do jogador
-let socketParaJogadorKey = {}; // Mapeia socket.id -> chave do jogador
+let perguntas = []; // 18 perguntas no total (10 na Rodada 1 + 8 na Rodada 2)
+let jogadores = {}; 
+let socketParaJogadorKey = {}; 
 let perguntaAtualIndex = -1;
 let tempoRestante = 0;
 let timerInterval = null;
@@ -1079,14 +1079,14 @@ let quizFinalizado = false;
 let isStartingQuestion = false;
 
 // Controle das Rodadas e Finalistas
-let rodadaAtual = 1; // 1 = Primeira Fase, 2 = Segunda Fase (Final)
-let finalistasChaves = []; // Armazena as chaves dos 4 alunos classificados
+let rodadaAtual = 1; // 1 = Classificatória, 2 = Final
+let finalistasChaves = []; 
 
 // =====================================================
-// FUNÇÃO DE SORTEIO INTELIGENTE (18 QUESTÕES NO TOTAL)
+// SORTEIO INTELIGENTE (18 QUESTÕES)
 // =====================================================
 function sortearPerguntasSemRepetirTema() {
-  const TOTAL_QUESTOES = 18; // 10 para Rodada 1 + 8 para Rodada 2
+  const TOTAL_QUESTOES = 18; 
   const porTema = {};
 
   bancoDePerguntasCompleto.forEach(q => {
@@ -1115,7 +1115,6 @@ function sortearPerguntasSemRepetirTema() {
     }
   }
 
-  // Renumera as perguntas de 1 até 18
   selecionadas.forEach((q, index) => {
     q.numero = index + 1;
   });
@@ -1124,7 +1123,6 @@ function sortearPerguntasSemRepetirTema() {
   console.log(`🎲 Sorteio realizado! 18 perguntas preparadas (10 na Rodada 1 e 8 na Rodada 2).`);
 }
 
-// Executa o primeiro sorteio assim que o servidor inicia
 sortearPerguntasSemRepetirTema();
 
 // =====================================================
@@ -1196,7 +1194,6 @@ io.on('connection', (socket) => {
       console.log(`👤 Novo aluno registrado: ${nomeTratado} (${escolaTratada})`);
     }
 
-    // Se o quiz já estiver em andamento, envia a pergunta para o aluno caso esteja autorizado
     if (perguntaAtualIndex >= 0 && perguntaAtualIndex < perguntas.length && !quizFinalizado) {
       if (rodadaAtual === 1 || finalistasChaves.includes(chaveJogador)) {
         socket.emit('nova_pergunta', perguntas[perguntaAtualIndex]);
@@ -1210,7 +1207,6 @@ io.on('connection', (socket) => {
   socket.on('obter_ranking', () => {
     const todosOrdenados = obterRankingOrdenado();
 
-    // Se já passou da última pergunta (18ª)
     if (perguntaAtualIndex >= perguntas.length - 1) {
       quizFinalizado = true;
       const top3 = todosOrdenados.slice(0, 3);
@@ -1223,27 +1219,24 @@ io.on('connection', (socket) => {
     }
   });
 
-  // 3. AVANÇAR PARA A PRÓXIMA PERGUNTA (DISPARADO PELO TELÃO/CONTROLADOR)
+  // 3. AVANÇAR PARA A PRÓXIMA PERGUNTA
   socket.on('proxima_pergunta', () => {
     if (quizFinalizado || isStartingQuestion) return;
 
     isStartingQuestion = true;
     perguntaAtualIndex++;
 
-    // VERIFICAÇÃO DE CORTE: Ao chegar na 10ª pergunta concluída (Índice 10 = Pergunta 11)
+    // CORTE NA PERGUNTA 10: Transição para a Rodada 2
     if (perguntaAtualIndex === 10 && rodadaAtual === 1) {
       rodadaAtual = 2;
       const ranking = obterRankingOrdenado();
       
-      // Filtra e armazena as chaves dos 4 primeiros colocados
+      // Define os 4 primeiros
       finalistasChaves = ranking.slice(0, 4).map(j => j.chave);
 
-      console.log("🚨 FIM DA RODADA 1! FINALISTAS DEFINIDOS (TOP 4):", finalistasChaves);
+      console.log("🚨 FIM DA RODADA 1! TOP 4 DEFINIDOS:", finalistasChaves);
 
-      // Notifica o telão sobre os 4 classificados
-      io.emit('anunciar_top4', { top4: ranking.slice(0, 4) });
-
-      // Notifica individualmente cada celular sobre a classificação ou eliminação
+      // Envia notificação aos celulares
       Object.values(jogadores).forEach(j => {
         if (j.socketId) {
           if (finalistasChaves.includes(j.chave)) {
@@ -1253,6 +1246,9 @@ io.on('connection', (socket) => {
           }
         }
       });
+
+      // Notifica o telão para exibir os 4 finalistas antes de entrar na pergunta 11
+      io.emit('anunciar_top4', { top4: ranking.slice(0, 4) });
     }
 
     if (perguntaAtualIndex < perguntas.length) {
@@ -1265,20 +1261,10 @@ io.on('connection', (socket) => {
         }
       });
 
-      console.log(`❓ Iniciando Pergunta ${perguntaAtualIndex + 1}/${perguntas.length} [Rodada ${rodadaAtual}] [Tema: ${q.tema}]: ${q.question}`);
+      console.log(`❓ Pergunta ${perguntaAtualIndex + 1}/${perguntas.length} [Rodada ${rodadaAtual}]: ${q.question}`);
       
-      // Se estiver na Rodada 2, envia a pergunta apenas para os 4 finalistas
-      if (rodadaAtual === 2) {
-        Object.values(jogadores).forEach(j => {
-          if (j.socketId && finalistasChaves.includes(j.chave)) {
-            io.to(j.socketId).emit('nova_pergunta', q);
-          }
-        });
-        // O telão sempre recebe todas as perguntas
-        io.emit('nova_pergunta_telao', q); 
-      } else {
-        io.emit('nova_pergunta', q);
-      }
+      // Transmissão padrão do evento 'nova_pergunta' para garantir compatibilidade
+      io.emit('nova_pergunta', q);
 
       iniciarCronometro();
     } else {
@@ -1310,15 +1296,15 @@ io.on('connection', (socket) => {
     io.emit('resetar_aluno'); 
   });
 
-  // 5. RECEBER RESPOSTA DO PARTICIPANTE (COM TRAVA DE FINALISTAS)
+  // 5. RECEBER RESPOSTA DO PARTICIPANTE
   socket.on('enviar_resposta', (index) => {
     const chave = socketParaJogadorKey[socket.id];
     const jogador = jogadores[chave];
     const q = perguntas[perguntaAtualIndex];
 
-    // Se estiver na Rodada 2 e o jogador não for um dos 4 finalistas, ignora a resposta
+    // Trava de segurança: Bloqueia respostas de quem não é TOP 4 na Rodada 2
     if (rodadaAtual === 2 && !finalistasChaves.includes(chave)) {
-      console.log(`🚫 Resposta bloqueada para ${jogador ? jogador.nome : 'Desconhecido'} (Eliminado na 1ª fase).`);
+      console.log(`🚫 Resposta ignorada para aluno fora da final.`);
       return;
     }
 
@@ -1344,36 +1330,31 @@ io.on('connection', (socket) => {
     }
   });
 
-  // 6. DESCONEXÃO MANUAL VIA BOTÃO NA TELA
+  // 6. DESCONEXÕES
   socket.on('aluno_desconectou_manual', () => {
     const chave = socketParaJogadorKey[socket.id];
     if (chave && jogadores[chave]) {
-      console.log(`🚪 Aluno saiu manualmente: ${jogadores[chave].nome}`);
       delete jogadores[chave];
       delete socketParaJogadorKey[socket.id];
     }
   });
 
-  // 7. DESCONEXÃO TEMPORÁRIA / PERDA DE SINAL
   socket.on('disconnect', () => {
     const chave = socketParaJogadorKey[socket.id];
     if (chave && jogadores[chave]) {
-      console.log(`⚠️ Sinal oscilou para: ${jogadores[chave].nome} (${socket.id}). Dados preservados no servidor.`);
       delete socketParaJogadorKey[socket.id];
-    } else {
-      console.log(`❌ Cliente não registrado desconectado: ${socket.id}`);
     }
   });
 });
 
 // =====================================================
-// INICIALIZAÇÃO DO SERVIDOR
+// INICIALIZAÇÃO
 // =====================================================
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`=====================================================`);
-  console.log(`🚀 SERVIDOR MEGA HELP 2026 RODANDO EM http://localhost:${PORT}`);
+  console.log(`🚀 SERVIDOR RODANDO EM http://localhost:${PORT}`);
   console.log(`=====================================================`);
 });
 
