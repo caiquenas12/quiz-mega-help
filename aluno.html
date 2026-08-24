@@ -44,12 +44,17 @@
 
     .question-box { background: rgba(0, 0, 0, 0.4); padding: 15px; border-radius: 10px; margin-bottom: 15px; font-size: 18px; font-weight: bold; line-height: 1.4; text-align: left; }
 
-    .option-btn { display: block; width: 100%; padding: 15px; margin: 10px 0; border-radius: 30px; border: none; font-size: 16px; font-weight: bold; color: #111; cursor: pointer; text-align: center; }
+    .option-btn { display: block; width: 100%; padding: 15px; margin: 10px 0; border-radius: 30px; border: none; font-size: 16px; font-weight: bold; color: #111; cursor: pointer; text-align: center; transition: transform 0.1s, filter 0.2s; }
     .opt-0 { background-color: #8cd3b3; }
     .opt-1 { background-color: #cde4c4; }
     .opt-2 { background-color: #ff9b71; }
     .opt-3 { background-color: #ff8585; }
-    .option-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .option-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ESTILOS DE DESTAQUE PARA AS RESPOSTAS */
+    .option-btn.selected { border: 4px solid #ffffff; transform: scale(1.02); }
+    .option-btn.correct-answer { background-color: #00e676 !important; color: #000 !important; font-weight: bold; border: 3px solid #ffffff; }
+    .option-btn.wrong-answer { background-color: #ff1744 !important; color: #fff !important; text-decoration: line-through; }
 
     .placar-aluno { font-size: 14px; color: #aaa; margin-top: 10px; }
   </style>
@@ -98,30 +103,33 @@
     let fotoBase64 = "";
     const FOTO_PADRAO = "https://cdn-icons-png.flaticon.com/512/847/847969.png";
 
-    // Otimização e compressão de foto de perfil
-    document.getElementById("foto-input").addEventListener("change", function(event) {
-      const file = event.target.files[0];
-      if (!file) return;
+    // 1. COMPRESSÃO E PRÉ-VISUALIZAÇÃO DA FOTO DE PERFIL
+    const fotoInput = document.getElementById("foto-input");
+    if (fotoInput) {
+      fotoInput.addEventListener("change", function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.src = e.target.result;
-        img.onload = function() {
-          const canvas = document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
-          canvas.width = 150;
-          canvas.height = 150;
-          ctx.drawImage(img, 0, 0, 150, 150);
-          fotoBase64 = canvas.toDataURL("image/jpeg", 0.7);
-          document.getElementById("preview-foto").src = fotoBase64;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.src = e.target.result;
+          img.onload = function() {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            canvas.width = 150;
+            canvas.height = 150;
+            ctx.drawImage(img, 0, 0, 150, 150);
+            fotoBase64 = canvas.toDataURL("image/jpeg", 0.7);
+            document.getElementById("preview-foto").src = fotoBase64;
+          };
         };
-      };
-      reader.readAsDataURL(file);
-    });
+        reader.readAsDataURL(file);
+      });
+    }
 
+    // 2. FUNÇÃO DE ENTRADA NO QUIZ
     function realizarEntrada(nome, escola, foto) {
-      // Garante que o nome terá no máximo 23 caracteres
       const nomeLimitado = nome.trim().slice(0, 23);
 
       socket.emit("entrar_quiz", { 
@@ -130,7 +138,6 @@
         foto: foto 
       });
 
-      // Salva dados locais no navegador para reconexão automática
       localStorage.setItem("quiz_aluno_nome", nomeLimitado);
       localStorage.setItem("quiz_aluno_escola", escola);
       if (foto) localStorage.setItem("quiz_aluno_foto", foto);
@@ -139,19 +146,22 @@
       document.getElementById("game-screen").style.display = "block";
     }
 
-    document.getElementById("btn-entrar").onclick = function() {
-      const nomeInput = document.getElementById("nome").value;
-      const escolaInput = document.getElementById("escola").value;
+    const btnEntrar = document.getElementById("btn-entrar");
+    if (btnEntrar) {
+      btnEntrar.onclick = function() {
+        const nomeInput = document.getElementById("nome").value;
+        const escolaInput = document.getElementById("escola").value;
 
-      if (!nomeInput.trim()) {
-        alert("Por favor, digite seu nome antes de entrar!");
-        return;
-      }
+        if (!nomeInput.trim()) {
+          alert("Por favor, digite seu nome antes de entrar!");
+          return;
+        }
 
-      realizarEntrada(nomeInput, escolaInput, fotoBase64);
-    };
+        realizarEntrada(nomeInput, escolaInput, fotoBase64);
+      };
+    }
 
-    // Auto-login se já existirem dados armazenados no navegador
+    // Auto-login na reconexão
     socket.on("connect", () => {
       const nomeSalvo = localStorage.getItem("quiz_aluno_nome");
       const escolaSalva = localStorage.getItem("quiz_aluno_escola") || "";
@@ -163,45 +173,57 @@
       }
     });
 
+    // 3. RECEBER NOVA PERGUNTA
     socket.on("nova_pergunta", (q) => {
-      document.getElementById("status").textContent = "Escolha sua resposta rapidamente:";
-      document.getElementById("feedback").textContent = "";
-      
+      const statusEl = document.getElementById("status");
+      const feedbackEl = document.getElementById("feedback");
       const container = document.getElementById("options-aluno");
       const questionContainer = document.getElementById("question-container");
       const questionText = document.getElementById("aluno-question");
       const temaText = document.getElementById("aluno-tema");
       const cronometroText = document.getElementById("aluno-cronometro");
 
-      container.innerHTML = "";
+      if (statusEl) statusEl.textContent = "Escolha sua resposta rapidamente:";
+      if (feedbackEl) feedbackEl.textContent = "";
+      if (container) container.innerHTML = "";
 
       if (q) {
-        temaText.textContent = q.tema || "Conhecimentos Gerais";
-        cronometroText.textContent = `⏱️ ${q.tempo || '--'}s`;
+        if (temaText) temaText.textContent = q.tema || "Conhecimentos Gerais";
+        if (cronometroText) cronometroText.textContent = `⏱️ ${q.tempo || '--'}s`;
 
         if (q.question) {
-          questionText.textContent = `${q.numero ? q.numero + '. ' : ''}${q.question}`;
-          questionContainer.style.display = "block";
-        } else {
+          if (questionText) questionText.textContent = `${q.numero ? q.numero + '. ' : ''}${q.question}`;
+          if (questionContainer) questionContainer.style.display = "block";
+        } else if (questionContainer) {
           questionContainer.style.display = "none";
         }
 
-        if (q.options) {
+        if (q.options && container) {
           q.options.forEach((opt, index) => {
             const btn = document.createElement("button");
             btn.className = `option-btn opt-${index % 4}`;
+            btn.dataset.index = index;
             btn.textContent = opt;
+
             btn.onclick = () => {
               socket.emit("enviar_resposta", index);
-              container.querySelectorAll("button").forEach(b => b.disabled = true);
-              document.getElementById("status").textContent = "Resposta enviada! Aguarde...";
+              
+              container.querySelectorAll("button").forEach(b => {
+                b.disabled = true;
+                b.classList.remove("selected");
+              });
+              btn.classList.add("selected");
+
+              if (statusEl) statusEl.textContent = "Resposta enviada! Aguarde...";
             };
+
             container.appendChild(btn);
           });
         }
       }
     });
 
+    // 4. ATUALIZAÇÃO DO CRONÔMETRO
     socket.on("tick_tempo", (tempo) => {
       const cronometroText = document.getElementById("aluno-cronometro");
       if (cronometroText) {
@@ -209,68 +231,91 @@
       }
     });
 
+    // 5. RESULTADO DA RESPOSTA
     socket.on("resultado_resposta", (data) => {
       const fb = document.getElementById("feedback");
       const placar = document.getElementById("placar-total");
 
-      if (data.correto) {
-        fb.textContent = `✅ VOCÊ ACERTOU! (+${data.pontos || 10} pts)`;
-        fb.style.color = "#00ff66";
-      } else {
-        fb.textContent = "❌ RESPOSTA ERRADA!";
-        fb.style.color = "#ff4444";
+      const buttons = document.querySelectorAll("#options-aluno .option-btn");
+      buttons.forEach(btn => {
+        const btnIndex = parseInt(btn.dataset.index);
+        if (data.respostaCorreta !== undefined && btnIndex === data.respostaCorreta) {
+          btn.classList.add("correct-answer");
+        } else if (btn.classList.contains("selected") && !data.correto) {
+          btn.classList.add("wrong-answer");
+        }
+      });
+
+      if (fb) {
+        if (data.correto) {
+          fb.textContent = `✅ VOCÊ ACERTOU! (+${data.pontos || 0} pts)`;
+          fb.style.color = "#00ff66";
+        } else {
+          fb.textContent = "❌ RESPOSTA ERRADA!";
+          fb.style.color = "#ff4444";
+        }
       }
 
-      if (data.totalPontos !== undefined) {
+      if (placar && data.totalPontos !== undefined) {
         placar.textContent = `Pontuação Total: ${data.totalPontos} pts`;
       }
     });
 
-    socket.on("tempo_esgotado", () => {
-      document.getElementById("aluno-cronometro").textContent = "⌛ ESGOTADO!";
-      document.querySelectorAll("#options-aluno button").forEach(b => b.disabled = true);
-      
+    // 6. REVELAR RESPOSTA CORRETA
+    socket.on("revelar_resposta", (data) => {
+      const buttons = document.querySelectorAll("#options-aluno .option-btn");
+      buttons.forEach(btn => {
+        btn.disabled = true;
+        if (data.respostaCorreta !== undefined && parseInt(btn.dataset.index) === data.respostaCorreta) {
+          btn.classList.add("correct-answer");
+        }
+      });
+    });
+
+    // 7. TEMPO ESGOTADO
+    socket.on("tempo_esgotado", (data) => {
+      const cronometroText = document.getElementById("aluno-cronometro");
+      if (cronometroText) cronometroText.textContent = "⌛ ESGOTADO!";
+
+      const buttons = document.querySelectorAll("#options-aluno .option-btn");
+      buttons.forEach(btn => {
+        btn.disabled = true;
+        if (data && data.respostaCorreta !== undefined && parseInt(btn.dataset.index) === data.respostaCorreta) {
+          btn.classList.add("correct-answer");
+        }
+      });
+
       const fb = document.getElementById("feedback");
-      if (!fb.textContent) {
+      if (fb && !fb.textContent) {
         fb.textContent = "⏰ O tempo acabou!";
         fb.style.color = "#ffaa00";
       }
     });
 
-    // =====================================================
-    // EVENTO: ELIMINAÇÃO AO FIM DA 10ª PERGUNTA (RETORNAR AO INÍCIO)
-    // =====================================================
+    // 8. EVENTOS DE ELIMINAÇÃO E REINÍCIO DE JOGO
     socket.on("eliminado_retornar_inicio", (data) => {
-      // 1. Limpa o storage para impedir que reconecte sozinho
       localStorage.removeItem("quiz_aluno_nome");
       localStorage.removeItem("quiz_aluno_escola");
       localStorage.removeItem("quiz_aluno_foto");
 
-      // 2. Limpa formulários
       document.getElementById("nome").value = "";
       document.getElementById("escola").value = "";
       document.getElementById("foto-input").value = "";
       fotoBase64 = "";
       document.getElementById("preview-foto").src = FOTO_PADRAO;
 
-      // 3. Reseta estados da interface de jogo
       document.getElementById("status").textContent = "Aguardando a pergunta...";
       document.getElementById("options-aluno").innerHTML = "";
       document.getElementById("question-container").style.display = "none";
       document.getElementById("feedback").textContent = "";
       document.getElementById("placar-total").textContent = "";
 
-      // 4. Retorna para a tela de login
       document.getElementById("game-screen").style.display = "none";
       document.getElementById("login-screen").style.display = "block";
 
-      // 5. Exibe aviso ao aluno
       alert(data?.mensagem || "Obrigado por participar! Você não avançou para o TOP 4.");
     });
 
-    // =====================================================
-    // EVENTO: CLASSIFICAÇÃO PARA A 2ª RODADA (TOP 4)
-    // =====================================================
     socket.on("classificado_top4", (data) => {
       alert(data?.mensagem || "🔥 Parabéns! Você está classificado para o TOP 4!");
       document.getElementById("status").textContent = "🔥 Você está na 2ª Rodada! Aguarde a próxima pergunta...";
@@ -284,7 +329,6 @@
       document.getElementById("placar-total").textContent = "";
     });
 
-    // Reset acionado via professor/telão para nova rodada
     socket.on("resetar_aluno", () => {
       localStorage.removeItem("quiz_aluno_nome");
       localStorage.removeItem("quiz_aluno_escola");
@@ -293,7 +337,6 @@
       document.getElementById("nome").value = "";
       document.getElementById("escola").value = "";
       document.getElementById("foto-input").value = "";
-      
       fotoBase64 = "";
       document.getElementById("preview-foto").src = FOTO_PADRAO;
 
