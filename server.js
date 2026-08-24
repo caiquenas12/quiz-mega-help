@@ -1078,9 +1078,10 @@ let timerInterval = null;
 let quizFinalizado = false;
 let isStartingQuestion = false;
 
-// Controle das Rodadas e Finalistas
+// Controle das Rodadas, Finalistas e Bloqueios
 let rodadaAtual = 1; // 1 = Classificatória, 2 = Final
 let finalistasChaves = []; 
+let jogadoresEliminados = new Set(); 
 
 // =====================================================
 // SORTEIO INTELIGENTE (18 QUESTÕES)
@@ -1176,10 +1177,27 @@ io.on('connection', (socket) => {
     const chaveJogador = `${nomeTratado.toLowerCase()}_${escolaTratada.toLowerCase()}`;
     socketParaJogadorKey[socket.id] = chaveJogador;
 
+    // BLOQUEIO 1: Se o jogador já foi marcado como eliminado
+    if (jogadoresEliminados.has(chaveJogador)) {
+      console.log(`🚫 Entrada recusada (Aluno eliminado): ${nomeTratado}`);
+      socket.emit('aluno_eliminado');
+      return;
+    }
+
+    // TENTATIVA DE RECONEXÃO DE QUEM JÁ ESTAVA REGISTRADO
     if (jogadores[chaveJogador]) {
       jogadores[chaveJogador].socketId = socket.id;
       console.log(`🔄 Aluno reconectado: ${nomeTratado} (${escolaTratada})`);
     } else {
+      // BLOQUEIO 2: SE O JOGO JÁ COMEÇOU (Pergunta 1 em diante) -> BLOQUEIA NOVOS APARELHOS
+      if (perguntaAtualIndex >= 0) {
+        console.log(`🚫 Entrada recusada para novo aparelho (Partida em andamento): ${nomeTratado}`);
+        jogadoresEliminados.add(chaveJogador);
+        socket.emit('aluno_eliminado');
+        return;
+      }
+
+      // Se o jogo ainda NÃO começou (perguntaAtualIndex === -1), registra normalmente
       jogadores[chaveJogador] = {
         socketId: socket.id,
         chave: chaveJogador,
@@ -1191,9 +1209,10 @@ io.on('connection', (socket) => {
         pontos: 0,
         respondeu: false
       };
-      console.log(`👤 Novo aluno registrado: ${nomeTratado} (${escolaTratada})`);
+      console.log(`👤 Novo aluno registrado (Pré-jogo): ${nomeTratado} (${escolaTratada})`);
     }
 
+    // Se passou pelas validações acima, envia a pergunta atual (ou tela de eliminado se for rodada 2)
     if (perguntaAtualIndex >= 0 && perguntaAtualIndex < perguntas.length && !quizFinalizado) {
       if (rodadaAtual === 1 || finalistasChaves.includes(chaveJogador)) {
         socket.emit('nova_pergunta', perguntas[perguntaAtualIndex]);
@@ -1236,8 +1255,12 @@ io.on('connection', (socket) => {
 
       console.log("🚨 FIM DA RODADA 1! TOP 4 DEFINIDOS:", finalistasChaves);
 
-      // Envia notificação aos celulares
+      // Bloqueia no servidor e envia notificação para quem NÃO é top 4
       Object.values(jogadores).forEach(j => {
+        if (!finalistasChaves.includes(j.chave)) {
+          jogadoresEliminados.add(j.chave);
+        }
+
         if (j.socketId) {
           if (finalistasChaves.includes(j.chave)) {
             io.to(j.socketId).emit('aluno_classificado_top4');
@@ -1253,7 +1276,6 @@ io.on('connection', (socket) => {
         top4: ranking.slice(0, 4) 
       });
 
-      // Zera a trava e ajusta o índice para que o próximo Enter no telão chame a pergunta 11 (índice 10)
       perguntaAtualIndex = 9;
       isStartingQuestion = false;
       return;
@@ -1271,9 +1293,7 @@ io.on('connection', (socket) => {
 
       console.log(`❓ Pergunta ${perguntaAtualIndex + 1}/${perguntas.length} [Rodada ${rodadaAtual}]: ${q.question}`);
       
-      // Transmissão padrão do evento 'nova_pergunta' para garantir compatibilidade
       io.emit('nova_pergunta', q);
-
       iniciarCronometro();
     } else {
       quizFinalizado = true;
@@ -1290,6 +1310,7 @@ io.on('connection', (socket) => {
     perguntaAtualIndex = -1;
     rodadaAtual = 1;
     finalistasChaves = [];
+    jogadoresEliminados.clear(); // Limpa todos os bloqueios para uma nova partida
     quizFinalizado = false;
     isStartingQuestion = false;
     clearInterval(timerInterval);
@@ -1299,7 +1320,7 @@ io.on('connection', (socket) => {
 
     sortearPerguntasSemRepetirTema();
 
-    console.log("🔄 Quiz reiniciado com novo sorteio de perguntas.");
+    console.log("🔄 Quiz reiniciado! Entrada liberada para novos aparelhos.");
     io.emit('quiz_reiniciado');
     io.emit('resetar_aluno'); 
   });
@@ -1341,9 +1362,11 @@ io.on('connection', (socket) => {
   // 6. DESCONEXÕES
   socket.on('aluno_desconectou_manual', () => {
     const chave = socketParaJogadorKey[socket.id];
-    if (chave && jogadores[chave]) {
+    if (chave) {
+      jogadoresEliminados.add(chave); // Bloqueia para não voltar no mesmo quiz
       delete jogadores[chave];
       delete socketParaJogadorKey[socket.id];
+      console.log(`🚪 Aluno desconectou manualmente e foi bloqueado: ${chave}`);
     }
   });
 
