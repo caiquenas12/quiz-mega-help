@@ -60,7 +60,7 @@ const bancoDePerguntasCompleto = [
 { tema: "Geografia", question: "Qual estado fica a leste do Maranhão?", options: ["Pará", "Piauí", "Tocantins", "Amazonas"], correct: 1, tempo: 20 },
 { tema: "Geografia", question: "Qual estado brasileiro fica mais ao sul?", options: ["Paraná", "Santa Catarina", "Rio Grande do Sul", "São Paulo"], correct: 2, tempo: 20 },
 { tema: "Geografia", question: "Qual estado brasileiro fica mais ao norte?", options: ["Amapá", "Roraima", "Amazonas", "Pará"], correct: 1, tempo: 20 },
-{ tema: "Geografia", question: "Qual estado brasileiro possui formato parecido com uma bota?", options: ["Ceará", "Bahia", "Pernambuco", "Rio Grande do Norte"], correct: 2, tempo: 20 },
+
   // --- E VOCÊ VIAJAR DE SÃO PAULO PARA ---
 
   // --- GEOGRAFIA: VIAGENS E LOCALIZAÇÃO ---
@@ -331,7 +331,7 @@ const bancoDePerguntasCompleto = [
 { tema: "Matemática", question: "Qual é o MMC de 4 e 6?", options: ["8", "10", "12", "24"], correct: 2, tempo: 20 },
 { tema: "Matemática", question: "Qual é o MDC de 18 e 24?", options: ["3", "6", "9", "12"], correct: 1, tempo: 20 },
 
-{ tema: "Matemática", question: "Se todos os gatos são animais e Mimi é um gato, então Mimi é:", options: ["Uma planta", "Um animal", "Um objeto", "Não é possível saber"], correct: 1, tempo: 20 },
+
 { tema: "Matemática", question: "Qual número deve substituir o ponto de interrogação: 1, 4, 9, 16, ?", options: ["20", "24", "25", "30"], correct: 2, tempo: 20 },
 { tema: "Matemática", question: "Qual número completa a sequência: 100, 90, 80, 70, ?", options: ["50", "55", "60", "65"], correct: 2, tempo: 20 },
 { tema: "Matemática", question: "Qual número está faltando: 2, 6, 12, 20, 30, ?", options: ["36", "40", "42", "44"], correct: 2, tempo: 20 },
