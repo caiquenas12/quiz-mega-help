@@ -1,191 +1,295 @@
-// Conexão com o Socket.io
-const socket = io();
-let fotoBase64 = "";
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 
-// 1. COMPRESSÃO E PRÉ-VISUALIZAÇÃO DA FOTO DE PERFIL
-const fotoInput = document.getElementById("foto-input");
-if (fotoInput) {
-  fotoInput.addEventListener("change", function (event) {
-    const file = event.target.files[0];
-    if (!file) return;
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: "*" }
+});
 
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const img = new Image();
-      img.src = e.target.result;
-      img.onload = function () {
-        // Redimensiona para 150x150 para não sobrecarregar a memória nem a rede
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        canvas.width = 150;
-        canvas.height = 150;
-        ctx.drawImage(img, 0, 0, 150, 150);
-        fotoBase64 = canvas.toDataURL("image/jpeg", 0.7);
+app.use(express.static('public')); // Servindo arquivos estáticos
 
-        const preview = document.getElementById("preview-foto");
-        if (preview) preview.src = fotoBase64;
-      };
-    };
-    reader.readAsDataURL(file);
+// =====================================================
+// BANCO E ESTADO DO QUIZ
+// =====================================================
+let perguntas = []; // Sorteio de perguntas
+let jogadores = {}; 
+let socketParaJogadorKey = {}; 
+let perguntaAtualIndex = -1;
+let tempoRestante = 0;
+let timerInterval = null;
+let quizFinalizado = false;
+let isStartingQuestion = false;
+
+let rodadaAtual = 1;
+let finalistasChaves = []; 
+let jogadoresEliminados = new Set(); 
+
+// Exemplo de Banco de Perguntas (substitua pelo seu completo)
+const bancoDePerguntasCompleto = [
+  { tema: "História", question: "Em que ano ocorreu a Independência do Brasil?", options: ["1822", "1889", "1500", "1988"], correct: 0, tempo: 15 },
+  { tema: "Ciências", question: "Qual é o símbolo químico da água?", options: ["CO2", "H2O", "NaCl", "O2"], correct: 1, tempo: 15 }
+];
+
+function sortearPerguntasSemRepetirTema() {
+  const TOTAL_QUESTOES = 18; 
+  const porTema = {};
+
+  bancoDePerguntasCompleto.forEach(q => {
+    if (!porTema[q.tema]) porTema[q.tema] = [];
+    porTema[q.tema].push({ ...q });
   });
+
+  Object.keys(porTema).forEach(tema => {
+    porTema[tema].sort(() => Math.random() - 0.5);
+  });
+
+  const selecionadas = [];
+  const temasDisponiveis = Object.keys(porTema);
+  let cicloTemas = [...temasDisponiveis].sort(() => Math.random() - 0.5);
+
+  while (selecionadas.length < TOTAL_QUESTOES && temasDisponiveis.length > 0) {
+    if (cicloTemas.length === 0) {
+      cicloTemas = [...temasDisponiveis].sort(() => Math.random() - 0.5);
+    }
+
+    const temaAtual = cicloTemas.pop();
+
+    if (porTema[temaAtual] && porTema[temaAtual].length > 0) {
+      const perguntaExtraida = porTema[temaAtual].pop();
+      selecionadas.push(perguntaExtraida);
+    }
+  }
+
+  selecionadas.forEach((q, index) => {
+    q.numero = index + 1;
+  });
+
+  perguntas = selecionadas;
+  console.log(`🎲 Sorteio realizado! ${perguntas.length} perguntas preparadas.`);
 }
 
-// 2. BOTÃO DE ENTRAR NO GAME
-const btnEntrar = document.getElementById("btn-entrar");
-if (btnEntrar) {
-  btnEntrar.onclick = function () {
-    const nomeInput = document.getElementById("nome").value;
-    const escolaInput = document.getElementById("escola").value;
+sortearPerguntasSemRepetirTema();
 
-    if (!nomeInput.trim()) {
-      alert("Por favor, digite seu nome antes de entrar!");
+function obterRankingOrdenado() {
+  return Object.values(jogadores).sort((a, b) => b.pontos - a.pontos);
+}
+
+function iniciarCronometro() {
+  clearInterval(timerInterval);
+
+  timerInterval = setInterval(() => {
+    tempoRestante--;
+    io.emit("tick_tempo", tempoRestante);
+
+    if (tempoRestante <= 0) {
+      clearInterval(timerInterval);
+
+      const todosOrdenados = obterRankingOrdenado();
+      const qAtual = perguntas[perguntaAtualIndex];
+      const limiteRanking = (rodadaAtual === 2) ? 4 : 12;
+
+      console.log(`⏱️ Tempo esgotado na pergunta ${perguntaAtualIndex + 1}.`);
+
+      io.emit("tempo_esgotado", {
+        respostaCorreta: qAtual ? qAtual.correct : 0,
+        ranking: todosOrdenados.slice(0, limiteRanking),
+        rodada: rodadaAtual,
+        limite: limiteRanking
+      });
+    }
+  }, 1000);
+}
+
+function sanitizarEntrada(texto, fallback) {
+  if (typeof texto !== "string" || !texto.trim()) return fallback;
+  return texto.trim().substring(0, 40);
+}
+
+// =====================================================
+// EVENTOS DO SOCKET.IO
+// =====================================================
+io.on('connection', (socket) => {
+  console.log(`🔌 Novo cliente conectado: ${socket.id}`);
+
+  // 1. REGISTRO / RECONEXÃO DO JOGADOR
+  socket.on('entrar_quiz', (data = {}) => {
+    const fotoPadrao = "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+    const nomeTratado = sanitizarEntrada(data.nome, 'Aluno');
+    const escolaTratada = sanitizarEntrada(data.escola, 'Escola Geral');
+    
+    const chaveJogador = `${nomeTratado.toLowerCase()}_${escolaTratada.toLowerCase()}`;
+    socketParaJogadorKey[socket.id] = chaveJogador;
+
+    if (jogadoresEliminados.has(chaveJogador)) {
+      socket.emit('eliminado_retornar_inicio', { mensagem: 'Sua entrada foi recusada.' });
       return;
     }
 
-    // Dispara registro para o server.js
-    socket.emit("entrar_quiz", {
-      nome: nomeInput,
-      escola: escolaInput,
-      foto: fotoBase64
-    });
-
-    // Troca de tela
-    document.getElementById("login-screen").style.display = "none";
-    document.getElementById("game-screen").style.display = "block";
-  };
-}
-
-// 3. RECEBER NOVA PERGUNTA
-socket.on("nova_pergunta", (q) => {
-  const statusEl = document.getElementById("status");
-  const feedbackEl = document.getElementById("feedback");
-  const container = document.getElementById("options-aluno");
-  const questionContainer = document.getElementById("question-container");
-  const questionText = document.getElementById("aluno-question");
-  const temaText = document.getElementById("aluno-tema");
-  const cronometroText = document.getElementById("aluno-cronometro");
-
-  if (statusEl) statusEl.textContent = "";
-  if (feedbackEl) feedbackEl.textContent = "";
-  if (container) container.innerHTML = "";
-
-  if (q) {
-    if (temaText) temaText.textContent = q.tema || "Conhecimentos Gerais";
-    if (cronometroText) cronometroText.textContent = `⏱️ ${q.tempo || '--'}s`;
-
-    if (q.question) {
-      if (questionText) {
-        questionText.textContent = `${q.numero ? q.numero + '. ' : ''}${q.question}`;
+    if (jogadores[chaveJogador]) {
+      jogadores[chaveJogador].socketId = socket.id;
+      console.log(`🔄 Aluno reconectado: ${nomeTratado}`);
+    } else {
+      if (perguntaAtualIndex >= 0) {
+        socket.emit('eliminado_retornar_inicio', { mensagem: 'O jogo já começou!' });
+        return;
       }
-      if (questionContainer) questionContainer.style.display = "block";
-    } else if (questionContainer) {
-      questionContainer.style.display = "none";
+
+      jogadores[chaveJogador] = {
+        socketId: socket.id,
+        chave: chaveJogador,
+        nome: nomeTratado,
+        escola: escolaTratada,
+        foto: (data.foto && typeof data.foto === 'string' && data.foto.trim() !== "")
+          ? data.foto.trim()
+          : fotoPadrao,
+        pontos: 0,
+        respondeu: false
+      };
+      console.log(`👤 Novo aluno registrado: ${nomeTratado}`);
     }
 
-    if (q.options && container) {
-      q.options.forEach((opt, index) => {
-        const btn = document.createElement("button");
-        btn.className = `option-btn opt-${index % 4}`;
-        btn.dataset.index = index; // <--- ACRESCENTADO: Salva o índice do botão
-        btn.textContent = opt;
+    if (perguntaAtualIndex >= 0 && perguntaAtualIndex < perguntas.length && !quizFinalizado) {
+      if (rodadaAtual === 1 || finalistasChaves.includes(chaveJogador)) {
+        socket.emit('nova_pergunta', perguntas[perguntaAtualIndex]);
+      }
+    }
+  });
 
-        btn.onclick = () => {
-          // Envia o índice escolhido (0, 1, 2 ou 3)
-          socket.emit("enviar_resposta", index);
-          
-          // Trava todos os botões após responder
-          container.querySelectorAll("button").forEach(b => {
-            b.disabled = true;
-            b.classList.remove("selected"); // <--- ACRESCENTADO
-          });
-          btn.classList.add("selected"); // <--- ACRESCENTADO: Marca a escolha do aluno
+  // 2. RECEBER RESPOSTA DO PARTICIPANTE
+  socket.on('enviar_resposta', (index) => {
+    const chave = socketParaJogadorKey[socket.id];
+    const jogador = jogadores[chave];
+    const q = perguntas[perguntaAtualIndex];
 
-          if (statusEl) statusEl.textContent = "Resposta enviada! Aguarde...";
-        };
+    if (rodadaAtual === 2 && !finalistasChaves.includes(chave)) return;
 
-        container.appendChild(btn);
+    if (jogador && !jogador.respondeu && q && !quizFinalizado && tempoRestante > 0) {
+      jogador.respondeu = true;
+      const acertou = Number(index) === q.correct;
+
+      if (acertou) {
+        const pontosGanhos = 10 + tempoRestante;
+        jogador.pontos += pontosGanhos;
+
+        socket.emit('resultado_resposta', {
+          correto: true,
+          pontos: pontosGanhos,
+          totalPontos: jogador.pontos,
+          respostaCorreta: q.correct // Retorna o índice correto para destacar no cliente
+        });
+      } else {
+        socket.emit('resultado_resposta', {
+          correto: false,
+          pontos: 0,
+          totalPontos: jogador.pontos,
+          respostaCorreta: q.correct // Retorna o índice correto para destacar no cliente
+        });
+      }
+    }
+  });
+
+  // 3. AVANÇAR PARA A PRÓXIMA PERGUNTA
+  socket.on('proxima_pergunta', () => {
+    if (quizFinalizado || isStartingQuestion) return;
+
+    isStartingQuestion = true;
+    perguntaAtualIndex++;
+
+    if (perguntaAtualIndex === 10 && rodadaAtual === 1) {
+      rodadaAtual = 2;
+      const ranking = obterRankingOrdenado();
+      finalistasChaves = ranking.slice(0, 4).map(j => j.chave);
+
+      Object.values(jogadores).forEach(j => {
+        if (j.socketId) {
+          if (finalistasChaves.includes(j.chave)) {
+            io.to(j.socketId).emit('classificado_top4', {
+              mensagem: '🔥 Você avançou para o TOP 4!'
+            });
+          } else {
+            io.to(j.socketId).emit('eliminado_retornar_inicio', {
+              mensagem: 'Você não avançou para o TOP 4.'
+            });
+            delete jogadores[j.chave];
+          }
+        }
+      });
+
+      io.emit('anunciar_top4', { 
+        mensagem: "2ª rodada para os 4 primeiros colocados",
+        top4: ranking.slice(0, 4),
+        limite: 4
+      });
+
+      perguntaAtualIndex = 9;
+      isStartingQuestion = false;
+      return;
+    }
+
+    if (perguntaAtualIndex < perguntas.length) {
+      const q = perguntas[perguntaAtualIndex];
+      tempoRestante = q.tempo;
+
+      Object.keys(jogadores).forEach(key => {
+        if (jogadores[key]) jogadores[key].respondeu = false;
+      });
+
+      io.emit('nova_pergunta', q);
+      iniciarCronometro();
+    } else {
+      quizFinalizado = true;
+      const top3 = obterRankingOrdenado().slice(0, 3);
+      io.emit("fim_quiz", { podium: top3 });
+    }
+
+    isStartingQuestion = false;
+  });
+
+  // 4. OBTER RANKING
+  socket.on('obter_ranking', () => {
+    const todosOrdenados = obterRankingOrdenado();
+    if (perguntaAtualIndex >= perguntas.length - 1) {
+      quizFinalizado = true;
+      io.emit("fim_quiz", { podium: todosOrdenados.slice(0, 3) });
+    } else {
+      const limiteRanking = (rodadaAtual === 2) ? 4 : 12;
+      io.emit('mostrar_ranking', { 
+        ranking: todosOrdenados.slice(0, limiteRanking), 
+        rodada: rodadaAtual,
+        limite: limiteRanking
       });
     }
-  }
-});
-
-// 4. ATUALIZAÇÃO DO CRONÔMETRO
-socket.on("tick_tempo", (tempo) => {
-  const cronometroText = document.getElementById("aluno-cronometro");
-  if (cronometroText) {
-    cronometroText.textContent = `⏱️ ${tempo}s`;
-  }
-});
-
-// 5. RESULTADO DA RESPOSTA (Feedback individual)
-socket.on("resultado_resposta", (data) => {
-  const fb = document.getElementById("feedback");
-  const placar = document.getElementById("placar-total");
-
-  // <--- ACRESCENTADO: Destaca os botões correto/errado
-  const buttons = document.querySelectorAll("#options-aluno .option-btn");
-  buttons.forEach(btn => {
-    const btnIndex = parseInt(btn.dataset.index);
-    if (data.respostaCorreta !== undefined && btnIndex === data.respostaCorreta) {
-      btn.classList.add("correct-answer");
-    } else if (btn.classList.contains("selected") && !data.correto) {
-      btn.classList.add("wrong-answer");
-    }
   });
 
-  if (fb) {
-    if (data.correto) {
-      fb.textContent = `✅ VOCÊ ACERTOU! (+${data.pontos || 0} pts)`;
-      fb.style.color = "#00ff66";
-    } else {
-      fb.textContent = "❌ RESPOSTA ERRADA!";
-      fb.style.color = "#ff4444";
-    }
-  }
+  // 5. REINICIAR QUIZ
+  socket.on('reiniciar_quiz', () => {
+    perguntaAtualIndex = -1;
+    rodadaAtual = 1;
+    finalistasChaves = [];
+    jogadoresEliminados.clear();
+    quizFinalizado = false;
+    isStartingQuestion = false;
+    clearInterval(timerInterval);
 
-  // Se o servidor retornar o total acumulado, exibe
-  if (placar && data.totalPontos !== undefined) {
-    placar.textContent = `Pontuação Total: ${data.totalPontos} pts`;
-  }
-});
+    jogadores = {}; 
+    socketParaJogadorKey = {};
 
-// <--- ACRESCENTADO: Revela a resposta correta caso venha um evento de revelação do servidor
-socket.on("revelar_resposta", (data) => {
-  const buttons = document.querySelectorAll("#options-aluno .option-btn");
-  buttons.forEach(btn => {
-    btn.disabled = true;
-    if (data.respostaCorreta !== undefined && parseInt(btn.dataset.index) === data.respostaCorreta) {
-      btn.classList.add("correct-answer");
-    }
+    sortearPerguntasSemRepetirTema();
+
+    console.log("🔄 Quiz reiniciado!");
+    io.emit('quiz_reiniciado');
+  });
+
+  // 6. DESCONEXÃO
+  socket.on('disconnect', () => {
+    const chave = socketParaJogadorKey[socket.id];
+    if (chave) delete socketParaJogadorKey[socket.id];
   });
 });
 
-// 6. TEMPO ESGOTADO
-socket.on("tempo_esgotado", () => {
-  const cronometroText = document.getElementById("aluno-cronometro");
-  if (cronometroText) cronometroText.textContent = "⌛ ESGOTADO!";
-
-  // Bloqueia qualquer clique restante
-  document.querySelectorAll("#options-aluno button").forEach(b => b.disabled = true);
-
-  const fb = document.getElementById("feedback");
-  if (fb && !fb.textContent) {
-    fb.textContent = "⏰ O tempo acabou!";
-    fb.style.color = "#ffaa00";
-  }
-});
-
-// 7. QUIZ REINICIADO PELO TELÃO
-socket.on("quiz_reiniciado", () => {
-  const statusEl = document.getElementById("status");
-  const container = document.getElementById("options-aluno");
-  const questionContainer = document.getElementById("question-container");
-  const fb = document.getElementById("feedback");
-  const placar = document.getElementById("placar-total");
-
-  if (statusEl) statusEl.textContent = "Aguardando o professor iniciar...";
-  if (container) container.innerHTML = "";
-  if (questionContainer) questionContainer.style.display = "none";
-  if (fb) fb.textContent = "";
-  if (placar) placar.textContent = "";
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
