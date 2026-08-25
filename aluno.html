@@ -318,7 +318,7 @@
 
     socket.on("classificado_top4", (data) => {
       alert(data?.mensagem || "🔥 Parabéns! Você está classificado para o TOP 4!");
-      document.getElementById("status").textContent = "🔥 Você está na 2ª Rodada! Aguarde a próxima pergunta...";
+      
     });
 
     socket.on("quiz_reiniciado", () => {
