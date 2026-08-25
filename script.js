@@ -177,14 +177,14 @@ io.on('connection', (socket) => {
           correto: true,
           pontos: pontosGanhos,
           totalPontos: jogador.pontos,
-          respostaCorreta: q.correct // Retorna o índice correto para destacar no cliente
+          respostaCorreta: q.correct
         });
       } else {
         socket.emit('resultado_resposta', {
           correto: false,
           pontos: 0,
           totalPontos: jogador.pontos,
-          respostaCorreta: q.correct // Retorna o índice correto para destacar no cliente
+          respostaCorreta: q.correct
         });
       }
     }
@@ -204,11 +204,8 @@ io.on('connection', (socket) => {
 
       Object.values(jogadores).forEach(j => {
         if (j.socketId) {
-          if (finalistasChaves.includes(j.chave)) {
-            io.to(j.socketId).emit('classificado_top4', {
-              mensagem: '🔥 Você avançou para o TOP 4!'
-            });
-          } else {
+          if (!finalistasChaves.includes(j.chave)) {
+            // Elimina apenas quem NÃO ficou no TOP 4
             io.to(j.socketId).emit('eliminado_retornar_inicio', {
               mensagem: 'Você não avançou para o TOP 4.'
             });
